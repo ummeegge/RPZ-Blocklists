@@ -28,23 +28,30 @@ jobs:
 
       - name: Install Perl dependencies via cpanm
         run: |
-          cpanm --notest LWP::UserAgent LWP::Protocol::https IO::Socket::SSL
+          cpanm --notest LWP::UserAgent LWP::Protocol::https IO::Socket::SSL Text::CSV
 
       - name: Generate RPZ blocklists
         run: |
           mkdir -p tools/logs
-          perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt \
+          perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv \
             -e tools/logs/error_$(date +%Y%m%d_%H%M%S).log \
             -s tools/logs/status_$(date +%Y%m%d_%H%M%S).txt \
             --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt
 
       - name: Commit and push changes
         run: |
+          mkdir -p tools/logs
+          # Delete all existing .rpz files in category directories
+          find ads/ malware/ phishing/ tracking/ misc/ -type f -name "*.rpz" -delete
+          perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv \
+            -e tools/logs/error_$(date +%Y%m%d_%H%M%S).log \
+            -s tools/logs/status_$(date +%Y%m%d_%H%M%S).txt \
+            --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt
+        run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add ads/ malware/ phishing/ tracking/ misc/
+          git add ads/ malware/ phishing/ tracking/ misc/ tools/list-mappings.csv
           git commit -m "Automated update: RPZ blocklists ($(date -u))" || echo "No changes to commit"
           # Holt neueste Änderungen vom Remote und integriert sie per Rebase
           git pull --rebase origin ${{ github.ref_name }}
           git push
-

@@ -83,13 +83,13 @@ Manual runs are also possible via the GitHub Actions tab.
 
 *Tip: Locally generated RPZ files are not required; the workflow will always generate fresh lists on the server.*
 
-Logging and .gitignore
+## Logging and .gitignore
 
     All logs (error, status, validation) are stored in tools/logs/ and are excluded from the repository via .gitignore.
 
     This keeps the repository clean and avoids committing large or sensitive log files.
 
-Notes
+## Notes
 
     Blocklists are updated and validated regularly.
 
