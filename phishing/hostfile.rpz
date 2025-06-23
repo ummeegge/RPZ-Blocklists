@@ -8,12 +8,12 @@ $TTL 300
 ; Wildcards: enabled
 ; SOA/NS records: enabled
 ; Number of entries: 964
-; Conversion date: Mon Jun 23 13:45:28 2025
+; Conversion date: Mon Jun 23 14:42:58 2025
 ; ======================
 ;
 ################################################################
 # abuse.ch URLhaus Host file                                   #
-# Last updated: 2025-06-23 12:06:11 (UTC)                      #
+# Last updated: 2025-06-23 14:29:06 (UTC)                      #
 #                                                              #
 # Terms Of Use: https://urlhaus.abuse.ch/api/                  #
 # For questions please contact urlhaus [at] abuse.ch           #
@@ -145,8 +145,6 @@ cetam.costariga.de CNAME .
 *.cetam.costariga.de CNAME .
 chaparral.es CNAME .
 *.chaparral.es CNAME .
-chinaapper.com CNAME .
-*.chinaapper.com CNAME .
 chinesegarden.com.tr CNAME .
 *.chinesegarden.com.tr CNAME .
 chiptune.com CNAME .
@@ -913,6 +911,8 @@ www.xyffqh.com CNAME .
 *.www.xyffqh.com CNAME .
 www.ysbaojia.com CNAME .
 *.www.ysbaojia.com CNAME .
+www.zhikey.com CNAME .
+*.www.zhikey.com CNAME .
 wz.3911.com CNAME .
 *.wz.3911.com CNAME .
 xai830k.com CNAME .
