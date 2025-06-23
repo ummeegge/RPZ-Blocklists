@@ -1,5 +1,4 @@
 ads,https://adaway.org/hosts.txt
-ads,https://dbl.oisd.nl/
 ads,https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext
 ads,https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt
 ads,https://raw.githubusercontent.com/bigdargon/hostsVN/master/hosts
@@ -30,6 +29,7 @@ malware,https://v.firebog.net/hosts/RPiList-Malware.txt
 malware,https://v.firebog.net/hosts/static/w3kbl.txt
 
 misc,https://raw.githubusercontent.com/AssoEchap/stalkerware-indicators/master/generated/hosts
+misc,https://big.oisd.nl/
 
 phishing,https://phishing.army/download/phishing_army_blocklist_extended.txt
 phishing,https://urlhaus.abuse.ch/downloads/hostfile/
