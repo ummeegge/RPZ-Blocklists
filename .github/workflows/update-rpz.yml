@@ -44,5 +44,7 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add ads/ malware/ phishing/ tracking/ misc/
           git commit -m "Automated update: RPZ blocklists ($(date -u))" || echo "No changes to commit"
+          # Holt neueste Änderungen vom Remote und integriert sie per Rebase
+          git pull --rebase origin ${{ github.ref_name }}
           git push
 
