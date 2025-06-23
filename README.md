@@ -32,7 +32,7 @@ RPZ-Blocklists/
     `perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt \
   -e tools/logs/error_$(date +%Y%m%d_%H%M%S).log \
   -s tools/logs/status_$(date +%Y%m%d_%H%M%S).txt \
-  --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt
+  --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt`
 
     -w enables wildcard entries.
 
