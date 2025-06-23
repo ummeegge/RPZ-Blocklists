@@ -1,0 +1,21 @@
+# Ignore all log files in tools/logs/
+tools/logs/
+
+# Ignore backup or temporary files
+*.bak
+*.swp
+*~
+*.tmp
+
+# Ignore Python cache (falls du mal Python-Skripte nutzt)
+__pycache__/
+
+# Ignore MacOS system files
+.DS_Store
+
+# Ignore Windows system files
+Thumbs.db
+
+# Ignore editor/project files
+.vscode/
+.idea/
