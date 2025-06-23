@@ -47,11 +47,16 @@ jobs:
             -e tools/logs/error_$(date +%Y%m%d_%H%M%S).log \
             -s tools/logs/status_$(date +%Y%m%d_%H%M%S).txt \
             --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add ads/ malware/ phishing/ tracking/ misc/ tools/list-mappings.csv
-          git commit -m "Automated update: RPZ blocklists ($(date -u))" || echo "No changes to commit"
-          # Holt neueste Änderungen vom Remote und integriert sie per Rebase
-          git pull --rebase origin ${{ github.ref_name }}
-          git push
+
+run: |
+    git config --global user.name 'github-actions[bot]'
+    git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    git add ads/ malware/ phishing/ tracking/ misc/ tools/list-mappings.csv
+    if git diff --staged --quiet; then
+      echo "No changes to commit"
+    else
+      git commit -m "Automated update: RPZ blocklists ($(date -u))"
+      git pull --rebase origin ${{ github.ref_name }}
+      git push
+    fi
+
