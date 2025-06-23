@@ -2,8 +2,8 @@ name: Update RPZ Blocklists
 
 on:
   schedule:
-    - cron: '0 3 * * *'   # Runs daily at 03:00 UTC
-  workflow_dispatch:       # Allows manual triggering
+    - cron: '0 3 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,7 +21,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwww-perl liblwp-protocol-https-perl libio-socket-ssl-perl
+          sudo apt-get install -y build-essential
+
+      - name: Install cpanminus
+        run: curl -L https://cpanmin.us | perl - App::cpanminus
+
+      - name: Install Perl dependencies via cpanm
+        run: |
+          cpanm --notest LWP::UserAgent LWP::Protocol::https IO::Socket::SSL
 
       - name: Generate RPZ blocklists
         run: |
