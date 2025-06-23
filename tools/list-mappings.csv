@@ -1,5 +1,4 @@
 url,category,filename
-url,category,filename
 https://adaway.org/hosts.txt,ads,ads_adaway.rpz
 https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext,ads,ads_yoyo_serverlist.rpz
 https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt,ads,ads_anudeep.rpz
