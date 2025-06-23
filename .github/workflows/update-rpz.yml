@@ -30,13 +30,6 @@ jobs:
         run: |
           cpanm --notest LWP::UserAgent LWP::Protocol::https IO::Socket::SSL Text::CSV
 
-      - name: Debug directory contents
-        run: |
-          echo "Listing contents of tools/ directory:"
-          ls -la tools/
-          echo "Checking if list-mappings.csv exists:"
-          test -f tools/list-mappings.csv && echo "File exists" || echo "File does not exist"
-
       - name: Generate RPZ blocklists
         run: |
           mkdir -p tools/logs

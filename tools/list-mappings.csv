@@ -30,7 +30,7 @@ https://v.firebog.net/hosts/RPiList-Malware.txt,malware,malware_rpilist.rpz
 https://v.firebog.net/hosts/static/w3kbl.txt,malware,malware_w3kbl.rpz
 
 https://raw.githubusercontent.com/AssoEchap/stalkerware-indicators/master/generated/hosts,misc,misc_stalkerware.rpz
-https://big.oisd.nl/,misc,misc_oisd.rpz
+https://big.oisd.nl/,misc,misc_oisd_big_list.rpz
 
 https://phishing.army/download/phishing_army_blocklist_extended.txt,phishing,phishing_army.rpz
 https://urlhaus.abuse.ch/downloads/hostfile/,phishing,phishing_urlhaus.rpz
