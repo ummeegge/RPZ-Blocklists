@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,11 +27,23 @@ jobs:
       - name: Generate RPZ blocklists
         run: |
           mkdir -p tools/logs
+          chmod -R 777 tools/logs # Ensure write permissions
           find ads/ malware/ phishing/ tracking/ misc/ -type f -name "*.rpz" -delete
           perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv \
             -e tools/logs/error_$(date +%Y%m%d_%H%M%S).log \
             -s tools/logs/status_$(date +%Y%m%d_%H%M%S).txt \
             --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt
+
+      - name: Debug log files
+        run: |
+          echo "Listing contents of tools/logs/:"
+          ls -la tools/logs/ || echo "Directory tools/logs/ is empty or does not exist"
+          echo "Status file contents:"
+          cat tools/logs/status_*.txt || echo "No status file found"
+          echo "Validation file contents:"
+          cat tools/logs/validation_*.txt || echo "No validation file found"
+          echo "Error file contents:"
+          cat tools/logs/error_*.log || echo "No error file found"
 
       - name: Upload logs as artifact
         uses: actions/upload-artifact@v4
@@ -53,5 +64,3 @@ jobs:
             git pull --rebase origin main
             git push
           fi
-
-# EOF
