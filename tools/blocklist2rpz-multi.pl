@@ -7,15 +7,18 @@
 #   - Supports machine-readable urllist.txt in <category>,<url> format
 #   - Automatically categorizes and stores .rpz files in category subdirectories
 #   - Warns if a GitHub HTML URL is detected (suggests RAW URL)
-#   - Only successful lists appear in the domain stats table
-#   - Tabular status summary at the end (lists, domains, time per list, total time)
-#   - Failed sources are listed in the error log and "Failed sources" section
-#   - Optionally writes status report to file (--status-report/-s)
-#   - RPZ/domain validation for all generated .rpz files (--validate/-V)
-#   - Optionally writes validation report to file (--validation-report)
-#   - Wildcard support (--wildcards/-w)
-#   - Optional SOA/NS record exclusion (--no-soa/-n)
-#   - Flexible logging: logs can be stored in tools/logs/ and excluded from git via .gitignore
+#     - Only successful lists appear in the domain
+#     stats table
+#   - Tabular status summary at the end (lists, domains, time
+#     per list, total time)
+#     - Failed sources are listed in the error log and "Failed sources" section
+#     - Optionally writes status report to file (--status-report/-s)
+#     - RPZ/domain validation for all generated .rpz files (--validate/-V)
+#     - Optionally writes validation report to file (--validation-report)
+#     - Wildcard support (--wildcards/-w)
+#     - Optional SOA/NS record exclusion (--no-soa/-n)
+#     - Flexible logging: logs can be stored in tools/logs/ and excluded from git via .gitignore
+#     - NEW: Reads list-mappings.csv to use custom filenames for RPZ files
 #
 # Usage:
 #   perl blocklist2rpz-multi.pl [options]
@@ -24,6 +27,7 @@
 #   --wildcards, -w             Output wildcard RPZ entries (*.<domain> CNAME .)
 #   --output-dir, -d <dir>      Output base directory for RPZ files (default: .)
 #   --urllist, -l <file>        File with <category>,<url> per line (CSV format)
+#   --list-mappings, -m <file>  File with <url>,<category>,<filename> to map URLs to custom RPZ filenames
 #   --error-log, -e <file>      Write unreachable or failed sources to this log file
 #   --no-soa, -n                Do not output SOA and NS records in the RPZ file
 #   --status-report, -s <file>  Write processing summary to this file
@@ -32,7 +36,7 @@
 #   --help, -h                  Show this help message
 #
 # Example:
-#   perl $0 -w -d ./ -l tools/urllist.txt \
+#   perl $0 -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv \
 #     -e tools/logs/error_$(date +%Y%m%d_%H%M%S).log \
 #     -s tools/logs/status_$(date +%Y%m%d_%H%M%S).txt \
 #     --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt
@@ -41,8 +45,9 @@
 #   - .rpz files are stored in category subdirectories (e.g. ads/, malware/, etc.)
 #   - Logs are recommended to be stored in tools/logs/ and excluded from git via .gitignore
 #   - urllist.txt must use the <category>,<url> format
+#   - list-mappings.csv must use the <url>,<category>,<filename> format
 #
-# Version: 1.0 (category and log handling enhancements)
+# Version: 1.1 (added list-mappings.csv support)
 # Author: ummeegge, with community contributions
 ###############################################################################
 
@@ -56,12 +61,14 @@ use File::Basename;
 use File::Path qw(make_path);
 use URI;
 use open ':std', ':encoding(UTF-8)';
+use Text::CSV;
 
 # --- Command-line option variables ---
 my $wildcards         = 0;
 my $output_dir        = '.';
 my $help              = 0;
 my $urllist           = '';
+my $list_mappings     = '';
 my $error_log         = '';
 my $no_soa            = 0;
 my $status_report     = '';
@@ -72,6 +79,7 @@ GetOptions(
     'wildcards|w'           => \$wildcards,
     'output-dir|d=s'        => \$output_dir,
     'urllist|l=s'           => \$urllist,
+    'list-mappings|m=s'     => \$list_mappings,
     'error-log|e=s'         => \$error_log,
     'no-soa|n'              => \$no_soa,
     'status-report|s=s'     => \$status_report,
@@ -87,6 +95,7 @@ Options:
   --wildcards, -w             Output wildcard RPZ entries (*.<domain> CNAME .)
   --output-dir, -d <dir>      Output directory for RPZ files (default: .)
   --urllist, -l <file>        File with category,url per line (see README)
+  --list-mappings, -m <file>  File with url,category,filename to map URLs to custom RPZ filenames
   --error-log, -e <file>      Write unreachable or failed sources to this log file
   --no-soa, -n                Do not output SOA and NS records in the RPZ file
   --status-report, -s <file>  Write processing summary to this file
@@ -94,7 +103,7 @@ Options:
   --validation-report <file>  Write validation report to this file
   --help, -h                  Show this help message
 Example:
-  perl $0 -w -d ./ -l tools/urllist.txt --validate --validation-report tools/validation.txt
+  perl $0 -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv --validate --validation-report tools/validation.txt
 USAGE
     exit 0;
 }
@@ -118,6 +127,21 @@ my @error_sources;
 
 # --- Time tracking ---
 my $global_start = time();
+
+# --- Read list mappings from list-mappings.csv ---
+my %url_to_filename;
+if ($list_mappings) {
+    my $csv = Text::CSV->new({ binary => 1, sep_char => ',', auto_diag => 1 });
+    open my $mfh, '<:encoding(utf8)', $list_mappings or die "Can't open list-mappings file '$list_mappings': $!\n";
+    # Skip header line
+    $csv->getline($mfh);
+    while (my $row = $csv->getline($mfh)) {
+        next unless @$row >= 3;
+        my ($url, $category, $filename) = @$row;
+        $url_to_filename{$url} = { category => $category, filename => $filename };
+    }
+    close $mfh;
+}
 
 # --- Read categorized sources from urllist.txt ---
 my @categorized_sources;
@@ -146,7 +170,7 @@ foreach my $entry (@categorized_sources) {
 
     my $list_start = time();
     my $content = '';
-    my $source_label = $source;  # Used for output filename
+    my $source_label = $source;  # Used for output filename fallback
 
     # --- Check for GitHub HTML URLs and warn the user ---
     if ($source =~ m{^https://github\.com/([^/]+/[^/]+)/blob/(.+)$}) {
@@ -192,10 +216,17 @@ foreach my $entry (@categorized_sources) {
         $source_label = basename($source);
     }
 
-    # --- Sanitize and normalize output filename ---
-    $source_label =~ s/[^a-zA-Z0-9_.-]/_/g;
-    $source_label =~ s/\.(txt|csv|tsv|list|php)$//i;
-    my $outfile = "$output_dir_for_cat/$source_label.rpz";
+    # --- Determine output filename ---
+    my $outfile;
+    if (exists $url_to_filename{$source} && $url_to_filename{$source}{filename}) {
+        $outfile = "$output_dir_for_cat/$url_to_filename{$source}{filename}";
+        $source_label = $url_to_filename{$source}{filename};
+    } else {
+        # Fallback to original filename logic
+        $source_label =~ s/[^a-zA-Z0-9_.-]/_/g;
+        $source_label =~ s/\.(txt|csv|tsv|list|php)$//i;
+        $outfile = "$output_dir_for_cat/$source_label.rpz";
+    }
 
     my ($rpz_data, $entry_count) = convert_blocklist_to_rpz($content, $source, $wildcards, $no_soa);
 
@@ -253,7 +284,7 @@ if ($status_report) {
     close $sfh;
 }
 
-# --- RPZ Validation (wie gehabt, ggf. anpassen für Unterordner) ---
+# --- RPZ Validation ---
 if ($validate) {
     my $validation = '';
     $validation .= "\n========== RPZ Validation ==========\n";
