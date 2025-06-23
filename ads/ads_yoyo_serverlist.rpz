@@ -8,7 +8,7 @@ $TTL 300
 ; Wildcards: enabled
 ; SOA/NS records: enabled
 ; Number of entries: 6840
-; Conversion date: Mon Jun 23 15:42:38 2025
+; Conversion date: Mon Jun 23 15:52:24 2025
 ; ======================
 ;
 # Blocklist for use with hosts files to block ads, trackers, and other nasty things

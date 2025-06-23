@@ -7,8 +7,8 @@ $TTL 300
 ; Source: https://urlhaus.abuse.ch/downloads/hostfile/
 ; Wildcards: enabled
 ; SOA/NS records: enabled
-; Number of entries: 964
-; Conversion date: Mon Jun 23 15:42:56 2025
+; Number of entries: 958
+; Conversion date: Mon Jun 23 15:52:42 2025
 ; ======================
 ;
 ################################################################
@@ -199,8 +199,6 @@ dcwblida.dz CNAME .
 *.dcwblida.dz CNAME .
 deneme.chanbaba.online CNAME .
 *.deneme.chanbaba.online CNAME .
-detail-booking.com.br CNAME .
-*.detail-booking.com.br CNAME .
 device.redirec.com CNAME .
 *.device.redirec.com CNAME .
 dezcom.com CNAME .
@@ -697,8 +695,6 @@ talentrecruitments.com CNAME .
 *.talentrecruitments.com CNAME .
 tanscarattorneys.co.tz CNAME .
 *.tanscarattorneys.co.tz CNAME .
-techbud.ro CNAME .
-*.techbud.ro CNAME .
 tecunonline.com CNAME .
 *.tecunonline.com CNAME .
 telegramcn.co CNAME .
@@ -981,6 +977,4 @@ zoltyszalik.org CNAME .
 *.zoltyszalik.org CNAME .
 zonalatina103.net CNAME .
 *.zonalatina103.net CNAME .
-zotzed.deborahjulene.com CNAME .
-*.zotzed.deborahjulene.com CNAME .
-# Number of entries: 482
+# Number of entries: 479
