@@ -1,0 +1,16 @@
+$TTL 300
+@ SOA localhost. root.localhost. 2025062300 43200 3600 86400 300
+  NS  localhost.
+;
+; ======================
+; Converted by: blocklist2rpz-multi (Perl script)
+; Source: https://dbl.oisd.nl/
+; Wildcards: enabled
+; SOA/NS records: enabled
+; Number of entries: 0
+; Conversion date: Mon Jun 23 13:45:12 2025
+; ======================
+;
+# OISD Blocklist - This format is deprecated and no longer updated.
+# Please switch to one of the supported formats listed on https://oisd.nl.
+# Thank you for using OISD!
