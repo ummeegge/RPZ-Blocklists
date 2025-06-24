@@ -56,11 +56,11 @@ The generated .rpz files can be included in your DNS resolver configuration.
 
 ## Current Categories
 
-ads: Ad and tracker domains
-malware: Malware, botnets, exploit domains
-phishing: Phishing and fraud domains
-tracking: Tracking, spyware, telemetry
-misc: Mixed or uncategorized sources
+- ads: Ad and tracker domains
+- malware: Malware, botnets, exploit domains
+- phishing: Phishing and fraud domains
+- tracking: Tracking, spyware, telemetry
+- misc: Mixed or uncategorized sources
 
 ## Automation with GitHub Actions
 

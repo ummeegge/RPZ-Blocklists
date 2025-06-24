@@ -4,9 +4,11 @@ This guide provides essential Git commands and best practices for contributing t
 Prerequisites
 
 Install Git: sudo apt install git (Linux) or equivalent for your OS.
-Configure Git:git config --global user.name "Your Name"
+Configure Git:
+```bash
+git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
-
+```
 
 
 ## Basic Workflow
@@ -18,11 +20,15 @@ cd RPZ-Blocklists
 ```
 
 Pull Latest Changes:Before making changes, sync with the remote main branch:
-`git pull --rebase origin main`
+`
+git pull --rebase origin main
+`
 
 
 Make Changes:Edit files (e.g., tools/urllist.txt, README.md). Test locally:
-`perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv`
+`
+perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv
+`
 
 
 Commit Changes:
@@ -32,14 +38,18 @@ git commit -m "Descriptive message (e.g., Add new blocklist source)"
 ```
 
 Push Changes:Use the pushup alias to pull remote changes and push safely:
-`git pushup`
+`
+git pushup
+`
 
 See “Set Up Pushup Alias” below for setup.
 
 
 Set Up Pushup Alias
 To avoid “fetch first” errors due to frequent workflow commits, use this alias:
-`git config --global alias.pushup '!git pull --rebase origin main && git push origin main'`
+`
+git config --global alias.pushup '!git pull --rebase origin main && git push origin main'
+`
 
 
 Usage: After committing, run git pushup.
