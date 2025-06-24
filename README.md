@@ -99,13 +99,18 @@ This project complies with GDPR and does not process personal data. All blocklis
 
 ## How to Contribute
 
-Add new blocklist sources to tools/urllist.txt and map them in tools/list-mappings.csv.
-Test changes locally using:
+If you want to suggest new blocklist sources, report bugs, or help improve this project:
+
+- Please read our **[Contribution Guidelines](CONTRIBUTING.md)** for details on submitting issues, feature requests, or pull requests.
+- For best practices and recommended Git workflows, check the **[Git Guide](git-guide.md)**.
+
+To add new blocklist sources, edit `tools/urllist.txt` and map them in `tools/list-mappings.csv`.  
+Test your changes locally using:
 ```bash
 perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv
 ```
 
-Contributions and suggestions for new high-quality sources are welcome, in here https://github.com/twitOne/RPZ-Blocklists/blob/main/CONTRIBUTING.md you can find further informations for contribution and here https://github.com/twitOne/RPZ-Blocklists/blob/main/git-guide.md you can find a Git Guide for best practice!
+Contributions and suggestions for new high-quality sources are welcome!  
 Feel free to open an issue or pull request.
 
 ## Licenses
