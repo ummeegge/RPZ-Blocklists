@@ -19,3 +19,6 @@ Thumbs.db
 # Ignore editor/project files
 .vscode/
 .idea/
+
+# Ignore Perl modules
+local/
