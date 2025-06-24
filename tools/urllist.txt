@@ -40,6 +40,10 @@ malware,https://v.firebog.net/hosts/static/w3kbl.txt
 
 misc,https://raw.githubusercontent.com/AssoEchap/stalkerware-indicators/master/generated/hosts
 misc,https://big.oisd.nl/
+misc,https://small.oisd.nl
+misc,https://nsfw.oisd.nl
+misc,https://nsfw-small.oisd.nl
+
 
 phishing,https://phishing.army/download/phishing_army_blocklist_extended.txt
 phishing,https://urlhaus.abuse.ch/downloads/hostfile/
