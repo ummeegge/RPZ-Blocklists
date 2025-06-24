@@ -17,7 +17,8 @@
 #     - Optional SOA/NS record exclusion (--no-soa/-n)
 #     - Flexible logging: logs can be stored in tools/logs/ and excluded from git via .gitignore
 #   - Reads list-mappings.csv to use custom filenames for RPZ files
-#   - NEW: Adds license and source comments from list-mappings.csv to RPZ headers
+#   - Adds license and source comments from list-mappings.csv to RPZ headers
+#   - NEW: Supports additional input formats: CSV, DNS zone files, IP address lists, JSON, and XML
 #
 # Usage:
 #   perl blocklist2rpz-multi.pl [options]
@@ -40,13 +41,26 @@
 #     -s tools/logs/status_$(date +%Y%m%d_%H%M%S).txt \
 #     --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt
 #
+# Supported Input Formats:
+#   - Hosts files: e.g., "0.0.0.0 example.com" -> "example.com CNAME ."
+#   - Adblock lists: e.g., "||example.com^" -> "example.com CNAME ."
+#   - Simple text lists: e.g., "example.com" -> "example.com CNAME ."
+#   - URLs in lists: e.g., "https://example.com/" -> "example.com CNAME ."
+#   - Simple CSV: e.g., "example.com,comment" -> "example.com CNAME ."
+#   - CSV with domains in first column: e.g., "example.com,phishing,source1" -> "example.com CNAME ."
+#   - DNS zone files: e.g., "example.com. IN CNAME ." -> "example.com CNAME ."
+#   - IP address lists: e.g., "192.168.1.1" -> "192.168.1.1.rpz-client-ip CNAME ."
+#   - JSON: e.g., '{"domains": ["example.com"]}' -> "example.com CNAME ."
+#   - XML: e.g., "<blocklist><domain>example.com</domain></blocklist>" -> "example.com CNAME ."
+#
 # Notes:
-#   - .rpz files are stored in category subdirectories (e.g. ads/, malware/, etc.)
+#   - .rpz files are stored in category subdirectories (e.g., ads/, malware/, etc.)
 #   - Logs are recommended to be stored in tools/logs/ and excluded from git via .gitignore
 #   - urllist.txt must use the <category>,<url> format
 #   - list-mappings.csv must use the <url>,<category>,<filename>,<comments> format
+#   - Requires Perl modules: LWP::UserAgent, Getopt::Long, POSIX, File::Basename, File::Path, URI, Text::CSV, JSON, XML::Simple
 #
-# Version: 1.2 (added license comments in RPZ headers)
+# Version: 1.3 (added support for CSV, DNS zone, IP, JSON, and XML formats)
 # Author: ummeegge, with community contributions
 ###############################################################################
 
@@ -60,6 +74,8 @@ use File::Path qw(make_path);
 use URI;
 use open ':std', ':encoding(UTF-8)';
 use Text::CSV;
+use JSON;          # For JSON parsing support
+use XML::Simple;   # For XML parsing support
 
 # --- Command-line option variables ---
 my $wildcards         = 0;
@@ -142,13 +158,13 @@ if ($list_mappings) {
 }
 
 # --- Read categorized sources from urllist.txt ---
-my @categorized_sources;  # Deklariert nur einmal
+my @categorized_sources;  # Declared only once
 if ($urllist) {
     open my $ufh, '<', $urllist or die "Cannot open urllist file '$urllist': $!\n";
     while (my $line = <$ufh>) {
         chomp $line;
         $line =~ s/^\s+|\s+$//g;
-        next if $line =~ /^\s*(#.*)?$/;  # Überspringe leere Zeilen und Kommentare
+        next if $line =~ /^\s*(#.*)?$/;  # Skip empty lines and comments
         if ($line =~ /^([a-zA-Z0-9_-]+),(https?:\/\/.+)$/) {
             my ($cat, $url) = ($1, $2);
             push @categorized_sources, { category => $cat, url => $url };
@@ -328,6 +344,15 @@ if ($validate) {
                 $domains++;
                 next;
             }
+            if ($line =~ /^([^\s]+)\.rpz-client-ip\s+CNAME\s+\.$/) {
+                my $d = $1;
+                unless (is_valid_ip($d)) {
+                    push @error_lines, "Invalid IP: $d";
+                    $ok = 0; $errors++;
+                }
+                $domains++;
+                next;
+            }
             if ($line =~ /^\s*[#;]/) {
                 next;
             }
@@ -375,6 +400,7 @@ sub convert_blocklist_to_rpz {
     my $entry_count = 0;
     my @output_lines;
 
+    # Validate domain names
     sub is_valid_domain {
         my $d = shift;
         return 0 if $d =~ /^\d+\.\d+\.\d+\.\d+$/;
@@ -382,13 +408,97 @@ sub convert_blocklist_to_rpz {
         return $d =~ /^(?:\*\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
     }
 
-    foreach my $line (split /\n/, $content) {
+    # Validate IP addresses
+    sub is_valid_ip {
+        my $ip = shift;
+        return $ip =~ /^\d+\.\d+\.\d+\.\d+$/;
+    }
+
+    # Detect the format of the input content
+    sub detect_format {
+        my ($content) = @_;
+        if ($content =~ /^\s*{/ || $content =~ /^\s*\[/) {
+            return 'json';
+        }
+        elsif ($content =~ /^\s*<\?xml/ || $content =~ /<[^>]+>/) {
+            return 'xml';
+        }
+        elsif ($content =~ /,/) {
+            return 'csv';
+        }
+        elsif ($content =~ /^\s*[^\s]+\.\s+(?:IN\s+)?(?:A\s+\d+\.\d+\.\d+\.\d+|CNAME\s+\.)/) {
+            return 'dns_zone';
+        }
+        elsif ($content =~ /^\d+\.\d+\.\d+\.\d+$/m) {
+            return 'ip_list';
+        }
+        return 'text';
+    }
+
+    # Detect input format
+    my $format = detect_format($content);
+
+    my @domains;
+    if ($format eq 'json') {
+        # Parse JSON content
+        # Example: {"domains": ["example.com", "test.com"]} -> ["example.com", "test.com"]
+        eval {
+            my $json = decode_json($content);
+            @domains = ref($json->{domains}) eq 'ARRAY' ? @{$json->{domains}} :
+                       ref($json) eq 'ARRAY' ? map { $_->{domain} } @{$json} : ();
+        };
+        if ($@) {
+            warn "Failed to parse JSON from $source_url: $@\n";
+            return ("; Failed to parse JSON\n", 0);
+        }
+    }
+    elsif ($format eq 'xml') {
+        # Parse XML content
+        # Example: <blocklist><domain>example.com</domain><domain>test.com</domain></blocklist> -> ["example.com", "test.com"]
+        eval {
+            my $xml = XMLin($content, ForceArray => ['domain']);
+            @domains = @{$xml->{domain}};
+        };
+        if ($@) {
+            warn "Failed to parse XML from $source_url: $@\n";
+            return ("; Failed to parse XML\n", 0);
+        }
+    }
+    elsif ($format eq 'csv') {
+        # Parse CSV content, assuming the first column contains domains
+        # Example: example.com,phishing,source1 -> example.com
+        my $csv = Text::CSV->new({ binary => 1, sep_char => ',' });
+        my @lines = split /\n/, $content;
+        foreach my $line (@lines) {
+            if ($csv->parse($line)) {
+                my ($domain) = ($csv->fields())[0]; # First column for domains
+                push @domains, $domain if $domain;
+            }
+        }
+    }
+    elsif ($format eq 'dns_zone') {
+        # Parse DNS zone file entries
+        # Example: example.com. IN CNAME . -> example.com
+        @domains = map { /^([^\s]+)\.\s+(?:IN\s+)?(?:A\s+\d+\.\d+\.\d+\.\d+|CNAME\s+\.)$/ ? $1 : () } split /\n/, $content;
+    }
+    elsif ($format eq 'ip_list') {
+        # Parse IP address list
+        # Example: 192.168.1.1 -> 192.168.1.1.rpz-client-ip CNAME .
+        @domains = grep { is_valid_ip($_) } split /\n/, $content;
+    }
+    else {
+        # Parse text-based formats (hosts, Adblock, simple text, URLs)
+        @domains = split /\n/, $content;
+    }
+
+    foreach my $line (@domains) {
         chomp $line;
         $line =~ s/\r$//;
         $line =~ s/^\s+|\s+$//g;
 
-        if ($line =~ /^\s*[#;]/) {
+        if ($format eq 'text' && $line =~ /^\s*[#;]/) {
             # Convert # comments to ; comments for Unbound compatibility
+            # Example: # comment -> ; comment
             $line =~ s/^#/;/;
             push @output_lines, "$line\n";
             next;
@@ -396,38 +506,68 @@ sub convert_blocklist_to_rpz {
         next if $line =~ /^\s*$/;
 
         my $domain;
+        my $is_ip = 0;
 
-        if ($line =~ /^\s*(?:0\.0\.0\.0|127\.0\.0\.1)\s+([^\s]+)/) {
-            $domain = $1;
+        if ($format eq 'ip_list' && is_valid_ip($line)) {
+            # Handle IP addresses
+            # Example: 192.168.1.1 -> 192.168.1.1.rpz-client-ip CNAME .
+            $domain = $line;
+            $is_ip = 1;
         }
-        elsif ($line =~ /^\|\|([^\^]+)\^/) {
-            $domain = $1;
-        }
-        elsif ($line =~ /^(\*?[^\s]+?\.[^\s]+?)\s*(?:[#;].*)?$/) {
-            $domain = $1;
-        }
-        elsif ($line =~ /^(\*?[^\s]+?\.[^\s]+?)[,\t]/) {
-            $domain = $1;
-        }
-        elsif ($line =~ m{^https?://(\*?[^\s]+?\.[^\s]+?)(?:/|$)}) {
-            $domain = $1;
+        elsif ($format eq 'text') {
+            # Handle hosts format
+            # Example: 0.0.0.0 example.com -> example.com CNAME .
+            if ($line =~ /^\s*(?:0\.0\.0\.0|127\.0\.0\.1)\s+([^\s]+)/) {
+                $domain = $1;
+            }
+            # Handle Adblock format
+            # Example: ||example.com^ -> example.com CNAME .
+            elsif ($line =~ /^\|\|([^\^]+)\^/) {
+                $domain = $1;
+            }
+            # Handle simple text list
+            # Example: example.com -> example.com CNAME .
+            elsif ($line =~ /^(\*?[^\s]+?\.[^\s]+?)\s*(?:[#;].*)?$/) {
+                $domain = $1;
+            }
+            # Handle simple CSV-like format
+            # Example: example.com,comment -> example.com CNAME .
+            elsif ($line =~ /^(\*?[^\s]+?\.[^\s]+?)[,\t]/) {
+                $domain = $1;
+            }
+            # Handle URLs
+            # Example: https://example.com/ -> example.com CNAME .
+            elsif ($line =~ m{^https?://(\*?[^\s]+?\.[^\s]+?)(?:/|$)}) {
+                $domain = $1;
+            }
+            else {
+                next;
+            }
         }
         else {
-            next;
+            $domain = $line;
         }
 
         my $is_wild = $domain =~ s/^\*\.//;
 
-        next unless is_valid_domain($domain);
-        next if $seen{$domain}++;
-        push @output_lines, "$domain CNAME .\n";
-        $entry_count++;
-        if ($wildcards) {
-            push @output_lines, "*.$domain CNAME .\n";
+        if ($is_ip) {
+            next unless is_valid_ip($domain);
+            next if $seen{$domain}++;
+            push @output_lines, "$domain.rpz-client-ip CNAME .\n";
             $entry_count++;
         }
-        elsif ($is_wild) {
-            push @output_lines, "; (Wildcard entry ignored because --wildcards/-w not set)\n";
+        else {
+            next unless is_valid_domain($domain);
+            next if $seen{$domain}++;
+            push @output_lines, "$domain CNAME .\n";
+            $entry_count++;
+            if ($wildcards) {
+                push @output_lines, "*.$domain CNAME .\n";
+                $entry_count++;
+            }
+            elsif ($is_wild) {
+                push @output_lines, "; (Wildcard entry ignored because --wildcards/-w not set)\n";
+            }
         }
     }
 

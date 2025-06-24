@@ -29,6 +29,8 @@ jobs:
             LWP::Protocol::https
             IO::Socket::SSL
             Text::CSV
+            JSON            # Added for JSON format support
+            XML::Simple     # Added for XML format support
 
       # Step 3: Cache CPAN modules
       - name: Cache CPAN modules
