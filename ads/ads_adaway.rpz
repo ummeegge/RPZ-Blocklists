@@ -9,6 +9,7 @@ $TTL 300
 ; SOA/NS records: enabled
 ; Number of entries: 13080
 ; Conversion date: Mon Jun 23 15:57:27 2025
+; Test if convert only with positiv diff
 ; ======================
 ;
 # AdAway default blocklist
