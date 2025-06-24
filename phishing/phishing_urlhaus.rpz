@@ -8,12 +8,12 @@ $TTL 300
 ; Wildcards: enabled
 ; SOA/NS records: enabled
 ; Number of entries: 970
-; Conversion date: Tue Jun 24 07:09:17 2025
+; Conversion date: Tue Jun 24 08:21:25 2025
 ; ======================
 ;
 ################################################################
 # abuse.ch URLhaus Host file                                   #
-# Last updated: 2025-06-24 06:30:13 (UTC)                      #
+# Last updated: 2025-06-24 08:02:08 (UTC)                      #
 #                                                              #
 # Terms Of Use: https://urlhaus.abuse.ch/api/                  #
 # For questions please contact urlhaus [at] abuse.ch           #

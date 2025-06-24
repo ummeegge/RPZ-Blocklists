@@ -1,0 +1,418 @@
+=head2 Tue Jun 24 08:20:46 2025: C<Module> L<MIME::Base32|MIME::Base32>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.303>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:46 2025: C<Module> L<URI|URI>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 5.32>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:47 2025: C<Module> L<Date::Parse|Date::Parse>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.33>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:47 2025: C<Module> L<IO::HTML|IO::HTML>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.004>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:48 2025: C<Module> L<Encode::Locale|Encode::Locale>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.05>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:48 2025: C<Module> L<LWP::MediaTypes|LWP::MediaTypes>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 6.04>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:50 2025: C<Module> L<Clone|Clone>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.47>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:51 2025: C<Module> L<HTML::Tagset|HTML::Tagset>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 3.24>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:52 2025: C<Module> L<HTML::Parser|HTML::Parser>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 3.83>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:53 2025: C<Module> L<File::Listing|File::Listing>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 6.16>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:54 2025: C<Module> L<HTTP::Negotiate|HTTP::Negotiate>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 6.01>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:54 2025: C<Module> L<WWW::RobotRules|WWW::RobotRules>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 6.02>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:55 2025: C<Module> L<Try::Tiny|Try::Tiny>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.32>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:56 2025: C<Module> L<HTTP::Cookies|HTTP::Cookies>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 6.11>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:20:56 2025: C<Module> L<LWP|LWP>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 6.78>
+
+=item *
+
+C<EXE_FILES: bin/lwp-download bin/lwp-dump bin/lwp-mirror bin/lwp-request>
+
+=back
+
+=head2 Tue Jun 24 08:21:06 2025: C<Module> L<Net::SSLeay|Net::SSLeay>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.94>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:21:07 2025: C<Module> L<IO::Socket::SSL|IO::Socket::SSL>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.094>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:21:07 2025: C<Module> L<LWP::Protocol::https|LWP::Protocol::https>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 6.14>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jun 24 08:21:07 2025: C<Module> L<Text::CSV|Text::CSV>
+
+=over 4
+
+=item *
+
+C<installed into: /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.06>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
