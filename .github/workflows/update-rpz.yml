@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 env:
-  RPZ_DIRS: ads malware phishing tracking misc # Add here new categories
+  RPZ_DIRS: ads malware phishing tracking misc social # Add here new categories
 
 jobs:
   update-rpz:
