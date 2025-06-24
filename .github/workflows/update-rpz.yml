@@ -1,83 +1,126 @@
+# Workflow to update RPZ blocklists hourly using a cron schedule
 name: Update RPZ Blocklists
 
+# Trigger the workflow hourly at minute 0 (e.g., 00:00, 01:00 UTC) or manually via workflow_dispatch
 on:
-  # Run this workflow every hour at minute 0 (i.e., at the start of each hour, UTC)
   schedule:
     - cron: '0 * * * *'
-  # Allow manual triggering of the workflow from the GitHub UI
   workflow_dispatch:
 
+# Environment variables available to all steps
 env:
-  # List of RPZ categories to process; add new categories here if needed
-  RPZ_DIRS: "ads malware phishing tracking misc social"
+  # Directories where RPZ files will be generated
+  RPZ_DIRS: ads malware phishing tracking misc social
 
+# Jobs to be executed
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    # Run on the latest Ubuntu runner
+    runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout repository
-        # Check out the repository code so it can be used in the workflow
         uses: actions/checkout@v4
+        with:
+          # Fetch only the latest commit to save time
+          fetch-depth: 1
 
-      - name: Setup Perl
-        # Install the specified version of Perl using a GitHub Action
+      # Step 2: Set up Perl environment
+      - name: Setup Perl environment
         uses: shogo82148/actions-setup-perl@v1
         with:
+          # Use Perl version 5.36
           perl-version: '5.36'
 
+      # Step 3: Cache CPAN modules to speed up subsequent runs
+      - name: Cache CPAN modules
+        uses: actions/cache@v4
+        with:
+          # Cache the Perl module directory
+          path: ~/perl5
+          # Cache key based on OS and script hash to ensure cache invalidation on script changes
+          key: ${{ runner.os }}-cpan-${{ hashFiles('tools/blocklist2rpz-multi.pl') }}
+          restore-keys: |
+            ${{ runner.os }}-cpan-
+
+      # Step 4: Install dependencies and CPAN modules
       - name: Install dependencies
-        # Install required system and Perl dependencies
         run: |
+          # Update package lists
           sudo apt-get update
+          # Install build-essential for compiling CPAN modules
           sudo apt-get install -y build-essential
+          # Install cpanminus for easy module installation
           curl -L https://cpanmin.us | perl - App::cpanminus
+          # Install required Perl modules without running tests to save time
           cpanm --notest LWP::UserAgent LWP::Protocol::https IO::Socket::SSL Text::CSV
 
+      # Step 5: Generate RPZ blocklists
       - name: Generate RPZ blocklists
-        # Prepare log directories, clean up old RPZ files, and generate new blocklists
         run: |
+          # Create logs directory if it doesn't exist
           mkdir -p tools/logs
+          # Set permissive permissions for logs directory
           chmod -R 777 tools/logs
+          # Create RPZ directories
           for dir in $RPZ_DIRS; do mkdir -p $dir; done
+          # Remove existing RPZ files to ensure fresh generation
           find $RPZ_DIRS -type f -name "*.rpz" -delete
+          # Run blocklist2rpz-multi.pl to generate RPZ files
           perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv \
             -e tools/logs/error_$(date +%Y%m%d_%H%M%S).log \
             -s tools/logs/status_$(date +%Y%m%d_%H%M%S).txt \
             --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt
+          # List generated RPZ files for debugging
+          echo "Listing generated RPZ files:"
+          find $RPZ_DIRS -type f -name "*.rpz" -exec ls -l {} \;
 
+      # Step 6: Debug log files
       - name: Debug log files
-        # Output the contents of the log directory and log files for debugging
         run: |
+          # List contents of logs directory
           echo "Listing contents of tools/logs/:"
           ls -la tools/logs/ || echo "Directory tools/logs/ is empty or does not exist"
+          # Display status file contents
           echo "Status file contents:"
           cat tools/logs/status_*.txt || echo "No status file found"
+          # Display validation file contents
           echo "Validation file contents:"
           cat tools/logs/validation_*.txt || echo "No validation file found"
+          # Display error file contents
           echo "Error file contents:"
           cat tools/logs/error_*.log || echo "No error file found"
 
+      # Step 7: Upload logs as artifact
       - name: Upload logs as artifact
-        # Upload the log files as an artifact so they can be downloaded from the Actions UI
         uses: actions/upload-artifact@v4
         with:
+          # Artifact name
           name: rpz-logs
+          # Path to logs directory
           path: tools/logs/
+          # Retain artifact for 7 days
           retention-days: 7
+          # Warn if no files are found
+          if-no-files-found: warn
 
-      - name: Commit and force-push changes
-        # Commit any changes and force-push to the main branch if there are updates
+      # Step 8: Commit and push changes
+      - name: Commit and push changes
         run: |
+          # Configure git user for commits
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          # Stage RPZ files and list-mappings.csv
           git add $RPZ_DIRS tools/list-mappings.csv
-
+          # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
+            # Commit changes with timestamp
             git commit -m "Automated update: RPZ blocklists ($(date -u))"
-            git fetch origin main
-            git reset --hard origin/main
-            git push --force-with-lease
+            # Pull with rebase to handle concurrent changes
+            git pull --rebase origin main
+            # Push changes to main branch
+            git push origin main
           fi
