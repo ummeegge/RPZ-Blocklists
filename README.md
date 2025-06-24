@@ -15,8 +15,9 @@ RPZ-Blocklists/
 ├── misc/        # RPZ files for mixed or uncategorized sources
 ├── tools/
 │   ├── urllist.txt             # List of all blocklist sources (<category>,<url> per line)
-│   ├── list-mappings.csv       # Mapping of sources to categories
+│   ├── list-mappings.csv       # Mapping of sources to categories and licenses
 │   ├── blocklist2rpz-multi.pl  # Perl script to convert and validate blocklists
+│   ├── LICENSE                 # GPLv3 license for the conversion script
 │   └── logs/                   # (Git-ignored) log files for errors, status, validation
 └── README.md
 ```
@@ -47,11 +48,10 @@ Explanation:
 -  --validate checks the generated RPZ files.
 -  --validation-report writes a validation summary.
 -  -e and -s write error and status logs (recommended: use tools/logs/).
+-  Run `perl tools/blocklist2rpz-multi.pl --help` for more options.
 
-For more options, run:
-    `perl tools/blocklist2rpz-multi.pl --help`
+## Integrate with Unbound (or similar):
 
-Integrate with Unbound (or similar):
 The generated .rpz files can be included in your DNS resolver configuration.
 
 ## Current Categories
@@ -64,24 +64,20 @@ The generated .rpz files can be included in your DNS resolver configuration.
 
 ## Automation with GitHub Actions
 
-This repository includes a GitHub Actions workflow that automatically updates all RPZ blocklists hourly. The workflow:
+This repository includes a GitHub Actions workflow that automatically updates all RPZ blocklists hourly.
 
+The workflow:
+
+- File: [.github/workflows/update-rpz.yml](.github/workflows/update-rpz.yml) .
+- Trigger: Hourly cron (0 * * * *) or manual via workflow_dispatch
 - Checks out the repository.
 - Installs Perl 5.36 and required CPAN modules (LWP::UserAgent, LWP::Protocol::https, IO::Socket::SSL, Text::CSV).
 - Caches CPAN modules to speed up builds.
 - Generates RPZ files using blocklist2rpz-multi.pl based on tools/urllist.txt and tools/list-mappings.csv.
 - Validates generated RPZ files and logs results to tools/logs/.
 - Commits and pushes updated .rpz files to the main branch.
-
-You can find the workflow file in `.github/workflows/update-rpz.yml`.  
-Manual runs are also possible via the GitHub Actions tab.
-
-## Workflow Details
-
-- File: .github/workflows/update-rpz.yml
-- Trigger: Hourly cron (0 * * * *) or manual via workflow_dispatch
-- Logs: Available as rpz-logs artifact (status, validation, and error logs).
-- Manual runs are possible via the GitHub Actions tab.
+- Logs: Available as rpz-logs artifact (status, validation, error logs).
+- Manual Runs: Trigger via the GitHub Actions tab.
 
 *Tip: Locally generated RPZ files are not required; the workflow will always generate fresh lists on the server.*
 
@@ -97,6 +93,10 @@ Manual runs are also possible via the GitHub Actions tab.
 - Failed or unreachable sources are logged automatically.
 - The script warns if a GitHub HTML URL is detected (use RAW URLs!).
 
+## Data Privacy
+
+This project complies with GDPR and does not process personal data. All blocklists are publicly available and used for security purposes.
+
 ## How to Contribute
 
 Add new blocklist sources to tools/urllist.txt and map them in tools/list-mappings.csv.
@@ -106,3 +106,12 @@ perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-ma
 ```
 
 Contributions and suggestions for new high-quality sources are welcome! Feel free to open an issue or pull request.
+
+## Licenses
+
+Each RPZ file includes its license information in the header, sourced from [tools/list-mappings.csv](tools/list-mappings.csv). Note that malware_kadhosts.rpz is licensed under CC BY-SA 4.0 as required by KADhosts. The conversion script (blocklist2rpz-multi.pl) is licensed under GPLv3 (see [tools/LICENSE](tools/LICENSE)).
+
+## Special Thanks
+
+- FiltersHeroes, AdAway, and all blocklist maintainers for their open-source contributions
+- The open-source community for keeping the internet safer
