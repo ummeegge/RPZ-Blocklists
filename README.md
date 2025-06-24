@@ -16,6 +16,7 @@ RPZ-Blocklists/
 ├── ads/         # RPZ files for ad and tracker domains
 ├── malware/     # RPZ files for malware and malicious domains
 ├── phishing/    # RPZ files for phishing and fraud domains
+├── social/      # RPZ files for social media domains
 ├── tracking/    # RPZ files for tracking and spyware domains
 ├── misc/        # RPZ files for mixed or uncategorized sources
 ├── tools/
@@ -72,11 +73,12 @@ rpz:
 
 ## Current Categories
 
-- ads: Ad and tracker domains
-- malware: Malware, botnets, exploit domains
-- phishing: Phishing and fraud domains
-- tracking: Tracking, spyware, telemetry
-- misc: Mixed or uncategorized sources
+- **ads:** Ad and tracker domains
+- **malware:** Malware, botnets, exploit domains
+- **phishing:** Phishing and fraud domains
+- **social:** Social media domains
+- **tracking:** Tracking, spyware, telemetry
+- **misc:** Mixed or uncategorized sources
 
 ## Automation with GitHub Actions
 
