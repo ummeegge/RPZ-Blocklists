@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 env:
-  RPZ_DIRS: ads malware phishing tracking misc social # Add here new categories
+  RPZ_DIRS: ads malware phishing tracking misc social ip # Added 'ip' category for IP address lists
 
 jobs:
   update-rpz:
@@ -29,8 +29,8 @@ jobs:
             LWP::Protocol::https
             IO::Socket::SSL
             Text::CSV
-            JSON            # Added for JSON format support
-            XML::Simple     # Added for XML format support
+            JSON
+            XML::Simple
 
       # Step 3: Cache CPAN modules
       - name: Cache CPAN modules
