@@ -51,3 +51,4 @@ tracking,ads,https://raw.githubusercontent.com/FadeMind/hosts.extras/master/add.
 
 social,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/native.tiktok.extended.txt
 social,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/native.tiktok.txt
+social,https://raw.githubusercontent.com/anudeepND/blacklist/master/facebook.txt
