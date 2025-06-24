@@ -38,22 +38,21 @@ jobs:
             ~/perl5
             /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5
             /home/runner/work/RPZ-Blocklists/RPZ-Blocklists/local/lib/perl5/x86_64-linux
-          key: ${{ runner.os }}-cpan-${{ hashFiles('tools/blocklist2rpz-multi.pl') }}
+          key: ${{ runner.os }}-cpan-${{ hashFiles('tools/blocklist2rpz-multi.pl', 'tools/urllist.txt', 'tools/list-mappings.csv') }}
           restore-keys: |
             ${{ runner.os }}-cpan-
 
-      # Step 4: Generate RPZ blocklists (with debug info)
+      # Step 4: Generate RPZ blocklists
       - name: Generate RPZ blocklists
         run: |
           cd "$GITHUB_WORKSPACE"
           echo "Current directory: $(pwd)"
           echo "Workspace: $GITHUB_WORKSPACE"
           mkdir -p tools/logs
-          echo "Logs directory content:"
+          echo "Logs directory content before run:"
           ls -la tools/logs
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           echo "Will write to: tools/logs/error_${TIMESTAMP}.log"
-          touch "tools/logs/error_${TIMESTAMP}.log" || echo "Could not create error log!"
           perl tools/blocklist2rpz-multi.pl \
             -w \
             -d . \
@@ -64,19 +63,29 @@ jobs:
             --validate \
             --validation-report tools/logs/validation_${TIMESTAMP}.txt
 
-      # Optional: Remote Debugging (SSH Session)
-      # - name: Setup Debug Session
-      #   uses: csexton/debugger-action@master
+      # Step 5: Debug logs directory before upload
+      - name: Debug logs directory before upload
+        run: |
+          echo "Logs directory content before upload:"
+          ls -la $GITHUB_WORKSPACE/tools/logs/
 
-      # Step 5: Upload logs as artifact
+      # Step 6: Upload logs as artifact
       - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
           name: rpz-logs
-          path: $GITHUB_WORKSPACE/tools/logs/
+          path: tools/logs/*.*
           retention-days: 7
+          if-no-files-found: warn
+          include-hidden-files: true
 
-      # Step 6: Commit and push changes
+      # Step 7: Clean up old logs
+      - name: Clean up old logs
+        run: |
+          find $GITHUB_WORKSPACE/tools/logs/ -type f -mtime +7 -delete
+        if: always()
+
+      # Step 8: Commit and push changes
       - name: Commit and push changes
         run: |
           cd "$GITHUB_WORKSPACE"
