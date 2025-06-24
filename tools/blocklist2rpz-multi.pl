@@ -7,10 +7,8 @@
 #   - Supports machine-readable urllist.txt in <category>,<url> format
 #   - Automatically categorizes and stores .rpz files in category subdirectories
 #   - Warns if a GitHub HTML URL is detected (suggests RAW URL)
-#     - Only successful lists appear in the domain
-#     stats table
-#   - Tabular status summary at the end (lists, domains, time
-#     per list, total time)
+#     - Only successful lists appear in the domain stats table
+#   - Tabular status summary at the end (lists, domains, time per list, total time)
 #     - Failed sources are listed in the error log and "Failed sources" section
 #     - Optionally writes status report to file (--status-report/-s)
 #     - RPZ/domain validation for all generated .rpz files (--validate/-V)
@@ -18,7 +16,8 @@
 #     - Wildcard support (--wildcards/-w)
 #     - Optional SOA/NS record exclusion (--no-soa/-n)
 #     - Flexible logging: logs can be stored in tools/logs/ and excluded from git via .gitignore
-#     - NEW: Reads list-mappings.csv to use custom filenames for RPZ files
+#   - Reads list-mappings.csv to use custom filenames for RPZ files
+#   - NEW: Adds license and source comments from list-mappings.csv to RPZ headers
 #
 # Usage:
 #   perl blocklist2rpz-multi.pl [options]
@@ -27,7 +26,7 @@
 #   --wildcards, -w             Output wildcard RPZ entries (*.<domain> CNAME .)
 #   --output-dir, -d <dir>      Output base directory for RPZ files (default: .)
 #   --urllist, -l <file>        File with <category>,<url> per line (CSV format)
-#   --list-mappings, -m <file>  File with <url>,<category>,<filename> to map URLs to custom RPZ filenames
+#   --list-mappings, -m <file>  File with <url>,<category>,<filename>,<comments> to map URLs to custom RPZ filenames
 #   --error-log, -e <file>      Write unreachable or failed sources to this log file
 #   --no-soa, -n                Do not output SOA and NS records in the RPZ file
 #   --status-report, -s <file>  Write processing summary to this file
@@ -45,12 +44,11 @@
 #   - .rpz files are stored in category subdirectories (e.g. ads/, malware/, etc.)
 #   - Logs are recommended to be stored in tools/logs/ and excluded from git via .gitignore
 #   - urllist.txt must use the <category>,<url> format
-#   - list-mappings.csv must use the <url>,<category>,<filename> format
+#   - list-mappings.csv must use the <url>,<category>,<filename>,<comments> format
 #
-# Version: 1.1 (added list-mappings.csv support)
+# Version: 1.2 (added license comments in RPZ headers)
 # Author: ummeegge, with community contributions
 ###############################################################################
-
 
 use strict;
 use warnings;
@@ -95,7 +93,7 @@ Options:
   --wildcards, -w             Output wildcard RPZ entries (*.<domain> CNAME .)
   --output-dir, -d <dir>      Output directory for RPZ files (default: .)
   --urllist, -l <file>        File with category,url per line (see README)
-  --list-mappings, -m <file>  File with url,category,filename to map URLs to custom RPZ filenames
+  --list-mappings, -m <file>  File with url,category,filename,comments to map URLs to custom RPZ filenames
   --error-log, -e <file>      Write unreachable or failed sources to this log file
   --no-soa, -n                Do not output SOA and NS records in the RPZ file
   --status-report, -s <file>  Write processing summary to this file
@@ -137,8 +135,8 @@ if ($list_mappings) {
     $csv->getline($mfh);
     while (my $row = $csv->getline($mfh)) {
         next unless @$row >= 3;
-        my ($url, $category, $filename) = @$row;
-        $url_to_filename{$url} = { category => $category, filename => $filename };
+        my ($url, $category, $filename, $comments) = @$row;
+        $url_to_filename{$url} = { category => $category, filename => $filename, comments => $comments };
     }
     close $mfh;
 }
@@ -146,11 +144,11 @@ if ($list_mappings) {
 # --- Read categorized sources from urllist.txt ---
 my @categorized_sources;
 if ($urllist) {
-    open my $ufh, '<', $urllist or die "Can't open urllist file '$urllist': $!\n";
+    open my $ufh, '<', $urllist or die "Cannot open urllist file '$urllist': $!\n";
     while (my $line = <$ufh>) {
         chomp $line;
         $line =~ s/^\s+|\s+$//g;
-        next unless $line && $line !~ /^\s*#/;
+        next unless $line && $line !~m{^\s*($/.*)}#};
         if ($line =~ /^([a-zA-Z0-9_-]+),(https?:\/\/.+)$/) {
             my ($cat, $url) = ($1, $2);
             push @categorized_sources, { category => $cat, url => $url };
@@ -170,7 +168,7 @@ foreach my $entry (@categorized_sources) {
 
     my $list_start = time();
     my $content = '';
-    my $source_label = $source;  # Used for output filename fallback
+    my $source_label = $source; # Used for output filename fallback
 
     # --- Check for GitHub HTML URLs and warn the user ---
     if ($source =~ m{^https://github\.com/([^/]+/[^/]+)/blob/(.+)$}) {
@@ -216,11 +214,13 @@ foreach my $entry (@categorized_sources) {
         $source_label = basename($source);
     }
 
-    # --- Determine output filename ---
+    # --- Determine output filename and comments ---
     my $outfile;
+    my $comments = "No comments provided";
     if (exists $url_to_filename{$source} && $url_to_filename{$source}{filename}) {
         $outfile = "$output_dir_for_cat/$url_to_filename{$source}{filename}";
         $source_label = $url_to_filename{$source}{filename};
+        $comments = $url_to_filename{$source}{comments} if $url_to_filename{$source}{comments};
     } else {
         # Fallback to original filename logic
         $source_label =~ s/[^a-zA-Z0-9_.-]/_/g;
@@ -228,7 +228,7 @@ foreach my $entry (@categorized_sources) {
         $outfile = "$output_dir_for_cat/$source_label.rpz";
     }
 
-    my ($rpz_data, $entry_count) = convert_blocklist_to_rpz($content, $source, $wildcards, $no_soa);
+    my ($rpz_data, $entry_count) = convert_blocklist_to_rpz($content, $source, $wildcards, $no_soa, $comments);
 
     my $out;
     unless (open($out, '>', $outfile)) {
@@ -364,7 +364,7 @@ if ($validate) {
 
 # --- Blocklist-to-RPZ conversion function ---
 sub convert_blocklist_to_rpz {
-    my ($content, $source_url, $wildcards, $no_soa) = @_;
+    my ($content, $source_url, $wildcards, $no_soa, $comments) = @_;
 
     my $ttl        = 300;
     my $soa_serial = strftime("%Y%m%d00", localtime);
@@ -430,6 +430,22 @@ sub convert_blocklist_to_rpz {
     }
 
     my $header = '';
+    $header .= "; Generated by blocklist2rpz-multi.pl on " . scalar(localtime) . "\n";
+    $header .= "; Source URL: $source_url\n";
+    $header .= ";\n";
+    # Add license and source comments from list-mappings.csv
+    if ($comments && $comments ne "No comments provided") {
+        foreach my $comment_line (split /;/, $comments) {
+            $comment_line =~ s/^\s+|\s+$//g; # Trim whitespace
+            $header .= "; $comment_line\n" if $comment_line;
+        }
+        $header .= ";\n";
+    }
+    # Add special note for KADhosts (CC BY-SA 4.0)
+    if ($source_url eq 'https://raw.githubusercontent.com/PolishFiltersTeam/KADhosts/master/KADhosts.txt') {
+        $header .= "; Note: This RPZ file is licensed under CC BY-SA 4.0 as required by KADhosts\n";
+        $header .= ";\n";
+    }
     $header .= "\$TTL $ttl\n";
     unless ($no_soa) {
         $header .= "$soa\n";
