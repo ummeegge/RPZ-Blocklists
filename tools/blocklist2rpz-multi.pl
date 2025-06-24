@@ -142,13 +142,13 @@ if ($list_mappings) {
 }
 
 # --- Read categorized sources from urllist.txt ---
-my @categorized_sources;
+my @categorized_sources;  # Deklariert nur einmal
 if ($urllist) {
     open my $ufh, '<', $urllist or die "Cannot open urllist file '$urllist': $!\n";
     while (my $line = <$ufh>) {
         chomp $line;
         $line =~ s/^\s+|\s+$//g;
-        next unless $line && $line !~m{^\s*($/.*)}#};
+        next if $line =~ /^\s*(#.*)?$/;  # Überspringe leere Zeilen und Kommentare
         if ($line =~ /^([a-zA-Z0-9_-]+),(https?:\/\/.+)$/) {
             my ($cat, $url) = ($1, $2);
             push @categorized_sources, { category => $cat, url => $url };
