@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 env:
-  RPZ_DIRS: ads malware phishing tracking misc social
+  RPZ_DIRS: ads malware phishing tracking misc # Add here new categories
 
 jobs:
   update-rpz:
@@ -45,6 +45,7 @@ jobs:
       # Step 4: Generate RPZ blocklists
       - name: Generate RPZ blocklists
         run: |
+          mkdir -p tools/logs
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv \
             -e tools/logs/error_${TIMESTAMP}.log \
