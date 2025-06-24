@@ -9,6 +9,16 @@ ads,https://v.firebog.net/hosts/AdguardDNS.txt
 ads,https://v.firebog.net/hosts/Admiral.txt
 ads,https://v.firebog.net/hosts/Easylist.txt
 ads,https://v.firebog.net/hosts/Prigent-Ads.txt
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/anti.piracy.txt
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/blocklist-referral-native.txt
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/doh-vpn-proxy-bypass.txt
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/doh.txt,ads,ads_hagezi_doh.rpz
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/native.samsung.txt
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/native.tiktok.extended.txt
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/native.tiktok.txt,ads,ads_hagezi_native.tiktok.rpz
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/popupads.txt
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/pro.mini.txt
+ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/adblock/pro.plus.mini.txt
 
 malware,https://bitbucket.org/ethanr/dns-blacklists/raw/8575c9f96e5b4a1308f2f12394abd86d0927a4a0/bad_lists/Mandiant_APT1_Report_Appendix_D.txt
 malware,https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-malware.txt
