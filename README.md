@@ -57,7 +57,18 @@ Explanation:
 
 ## Integrate with Unbound (or similar):
 
-The generated .rpz files can be included in your DNS resolver configuration.
+The generated .rpz files can be included in your DNS resolver configuration with a standard configuration like this example
+```bash
+rpz:
+    name:                   twitOne.rpz
+    zonefile:               /etc/unbound/zonefiles/twitOne.rpz
+    url:                    https://raw.githubusercontent.com/twitOne/RPZ-Blocklists/refs/heads/main/ads/ads_example.rpz
+    rpz-action-override:    nxdomain
+    rpz-log:                yes
+    rpz-log-name:           twitOne
+    rpz-signal-nxdomain-ra: yes
+
+``` 
 
 ## Current Categories
 
