@@ -1,12 +1,15 @@
 name: Update RPZ Blocklists
 
 on:
+  # Run this workflow every hour at minute 0 (i.e., at the start of each hour, UTC)
   schedule:
-    - cron: '0 3 * * *'
+    - cron: '0 * * * *'
+  # Allow manual triggering of the workflow from the GitHub UI
   workflow_dispatch:
 
 env:
-  RPZ_DIRS: "ads malware phishing tracking misc social" # Add here new category
+  # List of RPZ categories to process; add new categories here if needed
+  RPZ_DIRS: "ads malware phishing tracking misc social"
 
 jobs:
   build:
@@ -14,14 +17,17 @@ jobs:
 
     steps:
       - name: Checkout repository
+        # Check out the repository code so it can be used in the workflow
         uses: actions/checkout@v4
 
       - name: Setup Perl
+        # Install the specified version of Perl using a GitHub Action
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: '5.36'
 
       - name: Install dependencies
+        # Install required system and Perl dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential
@@ -29,6 +35,7 @@ jobs:
           cpanm --notest LWP::UserAgent LWP::Protocol::https IO::Socket::SSL Text::CSV
 
       - name: Generate RPZ blocklists
+        # Prepare log directories, clean up old RPZ files, and generate new blocklists
         run: |
           mkdir -p tools/logs
           chmod -R 777 tools/logs
@@ -40,6 +47,7 @@ jobs:
             --validate --validation-report tools/logs/validation_$(date +%Y%m%d_%H%M%S).txt
 
       - name: Debug log files
+        # Output the contents of the log directory and log files for debugging
         run: |
           echo "Listing contents of tools/logs/:"
           ls -la tools/logs/ || echo "Directory tools/logs/ is empty or does not exist"
@@ -51,6 +59,7 @@ jobs:
           cat tools/logs/error_*.log || echo "No error file found"
 
       - name: Upload logs as artifact
+        # Upload the log files as an artifact so they can be downloaded from the Actions UI
         uses: actions/upload-artifact@v4
         with:
           name: rpz-logs
@@ -58,6 +67,7 @@ jobs:
           retention-days: 7
 
       - name: Commit and force-push changes
+        # Commit any changes and force-push to the main branch if there are updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -71,4 +81,3 @@ jobs:
             git reset --hard origin/main
             git push --force-with-lease
           fi
-
