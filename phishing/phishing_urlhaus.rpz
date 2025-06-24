@@ -7,8 +7,8 @@ $TTL 300
 ; Source: https://urlhaus.abuse.ch/downloads/hostfile/
 ; Wildcards: enabled
 ; SOA/NS records: enabled
-; Number of entries: 970
-; Conversion date: Tue Jun 24 08:21:25 2025
+; Number of entries: 968
+; Conversion date: Tue Jun 24 08:53:55 2025
 ; ======================
 ;
 ################################################################
@@ -215,8 +215,6 @@ dl.packetstormsecurity.net CNAME .
 *.dl.packetstormsecurity.net CNAME .
 dld.jxwan.com CNAME .
 *.dld.jxwan.com CNAME .
-doujinshi.in CNAME .
-*.doujinshi.in CNAME .
 down.54nb.com CNAME .
 *.down.54nb.com CNAME .
 down.fwqlt.com CNAME .
@@ -989,4 +987,4 @@ zoltyszalik.org CNAME .
 *.zoltyszalik.org CNAME .
 zonalatina103.net CNAME .
 *.zonalatina103.net CNAME .
-# Number of entries: 485
+# Number of entries: 484
