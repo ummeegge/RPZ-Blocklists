@@ -388,6 +388,8 @@ sub convert_blocklist_to_rpz {
         $line =~ s/^\s+|\s+$//g;
 
         if ($line =~ /^\s*[#;]/) {
+            # Convert # comments to ; comments for Unbound compatibility
+            $line =~ s/^#/;/;
             push @output_lines, "$line\n";
             next;
         }
