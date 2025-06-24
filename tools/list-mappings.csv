@@ -1,40 +1,35 @@
-url,category,filename
-https://adaway.org/hosts.txt,ads,ads_adaway.rpz
-https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext,ads,ads_yoyo_serverlist.rpz
-https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt,ads,ads_anudeep.rpz
-https://raw.githubusercontent.com/bigdargon/hostsVN/master/hosts,ads,ads_bigdargon.rpz
-https://raw.githubusercontent.com/FadeMind/hosts.extras/master/add.2o7Net/hosts,ads,ads_fademind_2o7net.rpz
-https://raw.githubusercontent.com/FadeMind/hosts.extras/master/UncheckyAds/hosts,ads,ads_fademind_uncheckyads.rpz
-https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt,ads,ads_disconnect_simple_ad.rpz
-https://v.firebog.net/hosts/AdguardDNS.txt,ads,ads_adguarddns.rpz
-https://v.firebog.net/hosts/Admiral.txt,ads,ads_admiral.rpz
-https://v.firebog.net/hosts/Easylist.txt,ads,ads_easylist.rpz
-https://v.firebog.net/hosts/Prigent-Ads.txt,ads,ads_prigent_ads.rpz
-
-https://bitbucket.org/ethanr/dns-blacklists/raw/8575c9f96e5b4a1308f2f12394abd86d0927a4a0/bad_lists/Mandiant_APT1_Report_Appendix_D.txt,malware,malware_mandiant_apt1.rpz
-https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-malware.txt,malware,malware_notrack.rpz
-https://lists.cyberhost.uk/malware.txt,malware,malware_cyberhost.rpz
-https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt,malware,malware_adfilt.rpz
-https://raw.githubusercontent.com/FadeMind/hosts.extras/master/add.Risk/hosts,malware,malware_fademind_risk.rpz
-https://raw.githubusercontent.com/FadeMind/hosts.extras/master/add.Spam/hosts,malware,malware_fademind_spam.rpz
-https://raw.githubusercontent.com/PolishFiltersTeam/KADhosts/master/KADhosts.txt,malware,malware_kadhosts.rpz
-https://raw.githubusercontent.com/Spam404/lists/master/main-blacklist.txt,malware,malware_spam404.rpz
-https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts,malware,malware_stevenblack.rpz
-https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/domains/doh.txt,malware,malware_hagezi_doh.rpz
-https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/domains/native.amazon.txt,malware,malware_hagezi_native_amazon.rpz
-https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/domains/native.apple.txt,malware,malware_hagezi_native_apple.rpz
-https://raw.githubusercontent.com/hagezi/dns-blocklists/refs/heads/main/domains/native.huawei.txt,malware,malware_hagezi_native_huawei.rpz
-https://v.firebog.net/hosts/Easyprivacy.txt,malware,malware_easyprivacy.rpz
-https://v.firebog.net/hosts/Prigent-Crypto.txt,malware,malware_prigent_crypto.rpz
-https://v.firebog.net/hosts/RPiList-Malware.txt,malware,malware_rpilist.rpz
-https://v.firebog.net/hosts/static/w3kbl.txt,malware,malware_w3kbl.rpz
-
-https://raw.githubusercontent.com/AssoEchap/stalkerware-indicators/master/generated/hosts,misc,misc_stalkerware.rpz
-https://big.oisd.nl/,misc,misc_oisd_big_list.rpz
-
-https://phishing.army/download/phishing_army_blocklist_extended.txt,phishing,phishing_army.rpz
-https://urlhaus.abuse.ch/downloads/hostfile/,phishing,phishing_urlhaus.rpz
-
-https://hostfiles.frogeye.fr/firstparty-trackers-hosts.txt,tracking,tracking_frogeye_firstparty.rpz
-https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt,tracking,tracking_crazymax_spy.rpz
-
+url,category,filename,comments
+https://adaway.org/hosts.txt,ads,ads_adaway.rpz,"License: CC BY 3.0 (http://creativecommons.org/licenses/by/3.0/); Source: AdAway (https://github.com/AdAway/adaway.github.io/); Copyright: Dominik Schuermann and contributors"
+https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext,ads,ads_yoyo_serverlist.rpz,"License: None specified; Source: Peter Lowe's Ad and Tracking Server List (https://pgl.yoyo.org/adservers/); Note: Used with assumed permission. Contact pgl@yoyo.org for clarification."
+https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt,ads,ads_anudeep.rpz,"License: MIT License (https://github.com/anudeepND/blacklist/blob/master/LICENSE); Source: AnudeepND (https://github.com/anudeepND/blacklist)"
+https://raw.githubusercontent.com/bigdargon/hostsVN/master/hosts,ads,ads_bigdargon.rpz,"License: MIT License (https://github.com/bigdargon/hostsVN/blob/master/LICENSE); Source: BigDargon (https://github.com/bigdargon/hostsVN)"
+https://raw.githubusercontent.com/FadeMind/hosts.extras/master/add.2o7Net/hosts,ads,ads_fademind_2o7net.rpz,"License: MIT License (https://github.com/FadeMind/hosts.extras/blob/master/LICENSE); Source: FadeMind (https://github.com/FadeMind/hosts.extras)"
+https://raw.githubusercontent.com/FadeMind/hosts.extras/master/UncheckyAds/hosts,ads,ads_fademind_uncheckyads.rpz,"License: MIT License (https://github.com/FadeMind/hosts.extras/blob/master/LICENSE); Source: FadeMind (https://github.com/FadeMind/hosts.extras)"
+https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt,ads,ads_disconnect_simple_ad.rpz,"License: GNU GPL v3.0 (https://github.com/disconnectme/disconnect/blob/master/LICENSE); Source: Disconnect (https://disconnect.me)"
+https://v.firebog.net/hosts/AdguardDNS.txt,ads,ads_adguarddns.rpz,"License: GNU GPL v3.0 (https://github.com/AdguardTeam/AdGuardSDNSFilter/blob/master/LICENSE); Source: AdGuard DNS Filter (https://filters.adtidy.org/)"
+https://v.firebog.net/hosts/Admiral.txt,ads,ads_admiral.rpz,"License: MIT License (https://github.com/LanikSJ/ubo-filters/blob/main/LICENSE); Source: LanikSJ (https://github.com/LanikSJ/ubo-filters); Copyright: LanikSJ"
+https://v.firebog.net/hosts/Easylist.txt,ads,ads_easylist.rpz,"License: GNU GPL v3.0 or CC BY-SA 3.0 (https://easylist.to/pages/licence.html); Source: EasyList (https://easylist.to/)"
+https://v.firebog.net/hosts/Prigent-Ads.txt,ads,ads_prigent_ads.rpz,"License: CC BY-SA (assumed) (https://dsi.ut-capitole.fr/blacklists/); Source: Fabrice Prigent via Firebog (https://dsi.ut-capitole.fr/blacklists/); Note: Contact Fabrice Prigent for license confirmation."
+https://bitbucket.org/ethanr/dns-blacklists/raw/8575c9f96e5b4a1308f2f12394abd86d0927a4a0/bad_lists/Mandiant_APT1_Report_Appendix_D.txt,malware,malware_mandiant_apt1.rpz,"License: None specified; Source: Mandiant (https://www.mandiant.com/); Note: Used for security purposes. Contact security@mandiant.com for clarification."
+https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-malware.txt,malware,malware_notrack.rpz,"License: GNU GPL v3.0 (https://gitlab.com/quidsup/notrack-blocklists/-/blob/master/LICENSE); Source: Quidsup (https://gitlab.com/quidsup/notrack-blocklists)"
+https://lists.cyberhost.uk/malware.txt,malware,malware_cyberhost.rpz,"License: CC BY-SA 4.0 (https://cyberhost.uk/malware-blocklist/); Source: Cyberhost UK (https://lists.cyberhost.uk/)"
+https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt,malware,malware_adfilt.rpz,"License: Dandelicence (https://github.com/DandelionSprout/Dandelicence); Source: DandelionSprout (https://github.com/DandelionSprout/adfilt)"
+https://raw.githubusercontent.com/FadeMind/hosts.extras/master/add.Risk/hosts,malware,malware_fademind_risk.rpz,"License: MIT License (https://github.com/FadeMind/hosts.extras/blob/master/LICENSE); Source: FadeMind (https://github.com/FadeMind/hosts.extras)"
+https://raw.githubusercontent.com/FadeMind/hosts.extras/master/add.Spam/hosts,malware,malware_fademind_spam.rpz,"License: MIT License (https://github.com/FadeMind/hosts.extras/blob/master/LICENSE); Source: FadeMind (https://github.com/FadeMind/hosts.extras)"
+https://raw.githubusercontent.com/PolishFiltersTeam/KADhosts/master/KADhosts.txt,malware,malware_kadhosts.rpz,"License: CC BY-SA 4.0 (https://github.com/FiltersHeroes/KADhosts/blob/master/LICENSE); Source: FiltersHeroes (https://github.com/FiltersHeroes/KADhosts)"
+https://raw.githubusercontent.com/Spam404/lists/master/main-blacklist.txt,malware,malware_spam404.rpz,"License: CC BY 3.0 (https://github.com/Spam404/lists/blob/master/LICENSE); Source: Spam404 (https://github.com/Spam404/lists)"
+https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts,malware,malware_stevenblack.rpz,"License: MIT License (https://github.com/StevenBlack/hosts/blob/master/LICENSE); Source: StevenBlack (https://github.com/StevenBlack/hosts)"
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/doh.txt,malware,malware_hagezi_doh.rpz,"License: GNU GPL v3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE); Source: Hagezi DNS Blocklists (https://github.com/hagezi/dns-blocklists)"
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.amazon.txt,malware,malware_hagezi_native_amazon.rpz,"License: GNU GPL v3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE); Source: Hagezi DNS Blocklists (https://github.com/hagezi/dns-blocklists)"
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.apple.txt,malware,malware_hagezi_native_apple.rpz,"License: GNU GPL v3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE); Source: Hagezi DNS Blocklists (https://github.com/hagezi/dns-blocklists)"
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/native.huawei.txt,malware,malware_hagezi_native_huawei.rpz,"License: GNU GPL v3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE); Source: Hagezi DNS Blocklists (https://github.com/hagezi/dns-blocklists)"
+https://v.firebog.net/hosts/Easyprivacy.txt,malware,malware_easyprivacy.rpz,"License: GNU GPL v3.0 or CC BY-SA 3.0 (https://easylist.to/pages/licence.html); Source: EasyPrivacy via Firebog (https://easylist.to/)"
+https://v.firebog.net/hosts/Prigent-Crypto.txt,malware,malware_prigent_crypto.rpz,"License: CC BY-SA (assumed) (https://dsi.ut-capitole.fr/blacklists/); Source: Fabrice Prigent via Firebog (https://dsi.ut-capitole.fr/blacklists/); Note: Contact Fabrice Prigent for license confirmation."
+https://v.firebog.net/hosts/RPiList-Malware.txt,malware,malware_rpilist.rpz,"License: CC BY-NC 4.0 (https://github.com/RPiList/specials/blob/master/LICENSE.md); Source: RPiList (https://github.com/RPiList/specials); Note: Non-commercial use only."
+https://v.firebog.net/hosts/static/w3kbl.txt,malware,malware_w3kbl.rpz,"License: MIT License (https://github.com/WaLLy3K/wally3k.github.io/blob/master/LICENSE); Source: WaLLy3K (https://github.com/WaLLy3K/wally3k.github.io); Copyright: WaLLy3K"
+https://raw.githubusercontent.com/AssoEchap/stalkerware-indicators/master/generated/hosts,misc,misc_stalkerware.rpz,"License: CC BY (https://github.com/AssoEchap/stalkerware-indicators#license); Source: AssoEchap (https://github.com/AssoEchap/stalkerware-indicators)"
+https://big.oisd.nl/,misc,misc_oisd_big_list.rpz,"License: GNU GPL v3.0 (https://www.gnu.org/licenses/gpl-3.0.html); Source: OISD (https://oisd.nl/)"
+https://phishing.army/download/phishing_army_blocklist_extended.txt,phishing,phishing_army.rpz,"License: CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/); Source: Phishing Army (https://phishing.army/); Note: Non-commercial use only."
+https://urlhaus.abuse.ch/downloads/hostfile/,phishing,phishing_urlhaus.rpz,"License: None specified; Source: URLhaus by abuse.ch (https://urlhaus.abuse.ch/); Note: Free for non-commercial security use per Terms of Use (https://abuse.ch/terms-of-use/). Contact support@abuse.ch for clarification."
+https://hostfiles.frogeye.fr/firstparty-trackers-hosts.txt,tracking,tracking_frogeye_firstparty.rpz,"License: None specified; Source: Frogeye (https://hostfiles.frogeye.fr/); Note: Used with assumed permission. Contact https://geoffrey.frogeye.fr for clarification."
+https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt,tracking,tracking_crazymax_spy.rpz,"License: MIT License (https://github.com/crazy-max/WindowsSpyBlocker/blob/master/LICENSE); Source: CrazyMax (https://github.com/crazy-max/WindowsSpyBlocker)"
