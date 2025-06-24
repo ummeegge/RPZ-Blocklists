@@ -105,7 +105,8 @@ Test changes locally using:
 perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv
 ```
 
-Contributions and suggestions for new high-quality sources are welcome! Feel free to open an issue or pull request.
+Contributions and suggestions for new high-quality sources are welcome, in here https://github.com/twitOne/RPZ-Blocklists/blob/main/CONTRIBUTING.md you can find further informations for contribution and here https://github.com/twitOne/RPZ-Blocklists/blob/main/git-guide.md you can find a Git Guide for best practice!
+Feel free to open an issue or pull request.
 
 ## Licenses
 
