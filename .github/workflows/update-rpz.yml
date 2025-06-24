@@ -42,22 +42,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cpan-
 
-      # Step 4: Generate RPZ blocklists
+      # Step 4: Generate RPZ blocklists (with absolute paths and debug info)
       - name: Generate RPZ blocklists
         run: |
-          mkdir -p tools/logs
+          echo "Current directory: $(pwd)"
+          mkdir -p "$GITHUB_WORKSPACE/tools/logs"
+          echo "Logs directory content:"
+          ls -la "$GITHUB_WORKSPACE/tools/logs"
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv \
-            -e tools/logs/error_${TIMESTAMP}.log \
-            -s tools/logs/status_${TIMESTAMP}.txt \
-            --validate --validation-report tools/logs/validation_${TIMESTAMP}.txt
+          perl "$GITHUB_WORKSPACE/tools/blocklist2rpz-multi.pl" \
+            -w \
+            -d "$GITHUB_WORKSPACE/" \
+            -l "$GITHUB_WORKSPACE/tools/urllist.txt" \
+            -m "$GITHUB_WORKSPACE/tools/list-mappings.csv" \
+            -e "$GITHUB_WORKSPACE/tools/logs/error_${TIMESTAMP}.log" \
+            -s "$GITHUB_WORKSPACE/tools/logs/status_${TIMESTAMP}.txt" \
+            --validate \
+            --validation-report "$GITHUB_WORKSPACE/tools/logs/validation_${TIMESTAMP}.txt"
 
       # Step 5: Upload logs as artifact
       - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
           name: rpz-logs
-          path: tools/logs/
+          path: $GITHUB_WORKSPACE/tools/logs/
           retention-days: 7
 
       # Step 6: Commit and push changes
