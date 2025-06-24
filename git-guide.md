@@ -20,15 +20,15 @@ cd RPZ-Blocklists
 ```
 
 Pull Latest Changes:Before making changes, sync with the remote main branch:
-`
+```bash
 git pull --rebase origin main
-`
+```
 
 
 Make Changes:Edit files (e.g., tools/urllist.txt, README.md). Test locally:
-`
+```bash
 perl tools/blocklist2rpz-multi.pl -w -d ./ -l tools/urllist.txt -m tools/list-mappings.csv
-`
+```
 
 
 Commit Changes:
@@ -38,18 +38,18 @@ git commit -m "Descriptive message (e.g., Add new blocklist source)"
 ```
 
 Push Changes:Use the pushup alias to pull remote changes and push safely:
-`
+```bash
 git pushup
-`
+```
 
 See “Set Up Pushup Alias” below for setup.
 
 
 Set Up Pushup Alias
 To avoid “fetch first” errors due to frequent workflow commits, use this alias:
-`
+```bash
 git config --global alias.pushup '!git pull --rebase origin main && git push origin main'
-`
+````
 
 
 Usage: After committing, run git pushup.
