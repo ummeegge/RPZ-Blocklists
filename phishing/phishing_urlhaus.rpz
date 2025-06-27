@@ -695,8 +695,6 @@ static.topxgun.com CNAME .
 *.static.topxgun.com CNAME .
 stattcheck-intuiit.com CNAME .
 *.stattcheck-intuiit.com CNAME .
-stdown.dinju.com CNAME .
-*.stdown.dinju.com CNAME .
 stealer.cy CNAME .
 *.stealer.cy CNAME .
 sterlingpropertygroup.com.au CNAME .
@@ -721,8 +719,6 @@ talentrecruitments.com CNAME .
 *.talentrecruitments.com CNAME .
 tanscarattorneys.co.tz CNAME .
 *.tanscarattorneys.co.tz CNAME .
-tapestryoftruth.com CNAME .
-*.tapestryoftruth.com CNAME .
 tatar.joumizni.de CNAME .
 *.tatar.joumizni.de CNAME .
 tecunonline.com CNAME .
@@ -743,12 +739,12 @@ tests.yjzj.org CNAME .
 *.tests.yjzj.org CNAME .
 theneerbreak.com CNAME .
 *.theneerbreak.com CNAME .
+thesignaturemag.salviatech.com CNAME .
+*.thesignaturemag.salviatech.com CNAME .
 thetileboutique.in CNAME .
 *.thetileboutique.in CNAME .
 thtp2.volamngayxua.net CNAME .
 *.thtp2.volamngayxua.net CNAME .
-tiacreation.club CNAME .
-*.tiacreation.club CNAME .
 tirtasentosa.com CNAME .
 *.tirtasentosa.com CNAME .
 tokengen.ru CNAME .
@@ -867,6 +863,8 @@ www.modernitgen.com CNAME .
 *.www.modernitgen.com CNAME .
 www.myvcart.com CNAME .
 *.www.myvcart.com CNAME .
+www.namuvpn.com CNAME .
+*.www.namuvpn.com CNAME .
 www.newkey.co.kr CNAME .
 *.www.newkey.co.kr CNAME .
 www.ojang.pe.kr CNAME .
@@ -885,6 +883,8 @@ www.salonmarketing.ca CNAME .
 *.www.salonmarketing.ca CNAME .
 www.seventools.de CNAME .
 *.www.seventools.de CNAME .
+www.silver-hubdachwohnwagen.de CNAME .
+*.www.silver-hubdachwohnwagen.de CNAME .
 www.spinaservice.com CNAME .
 *.www.spinaservice.com CNAME .
 www.ss-01.com CNAME .
@@ -933,6 +933,8 @@ xn--yh4bx88a.com CNAME .
 *.xn--yh4bx88a.com CNAME .
 yongtai.cn CNAME .
 *.yongtai.cn CNAME .
+younglovemommy.com CNAME .
+*.younglovemommy.com CNAME .
 yourclassmanager.com CNAME .
 *.yourclassmanager.com CNAME .
 yourlove.net CNAME .
@@ -971,8 +973,6 @@ zennahopson.com CNAME .
 *.zennahopson.com CNAME .
 zetkay.com CNAME .
 *.zetkay.com CNAME .
-zhaolearning.com CNAME .
-*.zhaolearning.com CNAME .
 zhigalovanatasha.ru CNAME .
 *.zhigalovanatasha.ru CNAME .
 zivalife.com.br CNAME .
