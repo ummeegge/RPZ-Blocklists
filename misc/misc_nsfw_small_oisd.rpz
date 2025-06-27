@@ -37725,6 +37725,8 @@ vndb.org CNAME .
 *.vndb.org CNAME .
 vnpocket.com CNAME .
 *.vnpocket.com CNAME .
+vnshow.top CNAME .
+*.vnshow.top CNAME .
 vocentar.com CNAME .
 *.vocentar.com CNAME .
 vodezhde.net CNAME .
