@@ -449,11 +449,6 @@ sub convert_blocklist_to_rpz {
         }
         $header .= ";\n";
     }
-    # Add special note for KADhosts (CC BY-SA 4.0)
-    if ($source_url eq 'https://raw.githubusercontent.com/PolishFiltersTeam/KADhosts/master/KADhosts.txt') {
-        $header .= "; Note: This RPZ file is licensed under CC BY-SA 4.0 as required by KADhosts\n";
-        $header .= ";\n";
-    }
     $header .= ";\n";
     $header .= "; ======================\n";
     $header .= "; Converted by: blocklist2rpz-multi (Perl script)\n";
