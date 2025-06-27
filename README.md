@@ -137,5 +137,5 @@ Each RPZ file includes its license information in the header, sourced from [tool
 
 ## Special Thanks
 
-- FiltersHeroes, AdAway, and all blocklist maintainers for their open-source contributions
+- To all blocklist maintainers for their open-source contributions
 - The open-source community for keeping the internet safer
