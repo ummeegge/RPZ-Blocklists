@@ -679,8 +679,6 @@ soap.apesirises.com CNAME .
 *.soap.apesirises.com CNAME .
 soft.110route.com CNAME .
 *.soft.110route.com CNAME .
-softcatalog.ru CNAME .
-*.softcatalog.ru CNAME .
 solutelco.com CNAME .
 *.solutelco.com CNAME .
 somautomotivorj.com.br CNAME .
@@ -897,8 +895,6 @@ www.surethinks.com CNAME .
 *.www.surethinks.com CNAME .
 www.tdejb.com CNAME .
 *.www.tdejb.com CNAME .
-www.techgeeks.org CNAME .
-*.www.techgeeks.org CNAME .
 www.tecunonline.com CNAME .
 *.www.tecunonline.com CNAME .
 www.test.peperoncinochepassione.it CNAME .
