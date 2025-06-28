@@ -2595,6 +2595,8 @@ ueni.dyndns.org CNAME .
 *.ueni.dyndns.org CNAME .
 adbox-v9.dynipv6.de CNAME .
 *.adbox-v9.dynipv6.de CNAME .
+gustamadh.dynv6.net CNAME .
+*.gustamadh.dynv6.net CNAME .
 sagamihara.dynv6.net CNAME .
 *.sagamihara.dynv6.net CNAME .
 t9rke-5zq1m.dynv6.net CNAME .
