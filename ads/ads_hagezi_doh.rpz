@@ -1001,8 +1001,6 @@ dns.dyn1.de CNAME .
 *.dns.dyn1.de CNAME .
 ueni.dyndns.org CNAME .
 *.ueni.dyndns.org CNAME .
-gustamadh.dynv6.net CNAME .
-*.gustamadh.dynv6.net CNAME .
 dns.dynx.pro CNAME .
 *.dns.dynx.pro CNAME .
 dnscache.e-utp.net CNAME .
