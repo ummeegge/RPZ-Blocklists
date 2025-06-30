@@ -212,24 +212,27 @@ if ($error_log) {
 my %url_to_filename;
 my %filename_to_url; # Track filename to detect duplicates
 if ($list_mappings) {
-	my $csv = Text::CSV->new({ binary => 1, sep_char => ',', auto_diag => 1 });
-	open my $mfh, '<:encoding(utf8)', $list_mappings or die "Can't open list-mappings file '$list_mappings': $!\n";
-	$csv->getline($mfh); # Skip header
-	while (my $row = $csv->getline($mfh)) {
-		next unless @$row >= 3;
-		my ($url, $category, $filename, $comments) = @$row;
-		if ($url_to_filename{$url}) {
-			log_message('WARNING', "Duplicate URL in list-mappings.csv: $url, keeping first entry ($url_to_filename{$url}{filename})");
-			next;
-		}
-		if ($filename_to_url{$filename}) {
-			log_message('WARNING', "Duplicate filename in list-mappings.csv: $filename for URL $url, already used by $filename_to_url{$filename}");
-			next;
-		}
-		$url_to_filename{$url} = { category => $category, filename => $filename, comments => $comments };
-		$filename_to_url{$filename} = $url;
-	}
-	close $mfh;
+    my $csv = Text::CSV->new({ binary => 1, sep_char => ',', auto_diag => 1 });
+    open my $mfh, '<:encoding(utf8)', $list_mappings or die "Can't open list-mappings file '$list_mappings': $!\n";
+    my $line_num = 0;
+    while (my $row = $csv->getline($mfh)) {
+        $line_num++;
+        log_message('DEBUG', "Processing row $line_num: @$row") if $debug_level >= 2;
+        next unless @$row >= 3;
+        my ($url, $category, $filename, $comments) = @$row;
+        log_message('DEBUG', "Parsed: URL=$url, Category=$category, Filename=$filename, Comments=$comments") if $debug_level >= 2;
+        if ($url_to_filename{$url}) {
+            log_message('WARNING', "Duplicate URL in list-mappings.csv: $url, keeping first entry ($url_to_filename{$url}{filename})");
+            next;
+        }
+        if ($filename_to_url{$filename}) {
+            log_message('WARNING', "Duplicate filename in list-mappings.csv: $filename for URL $url, already used by $filename_to_url{$filename}");
+            next;
+        }
+        $url_to_filename{$url} = { category => $category, filename => $filename, comments => $comments };
+        $filename_to_url{$filename} = $url;
+    }
+    close $mfh;
 }
 
 # Load or initialize hash storage
