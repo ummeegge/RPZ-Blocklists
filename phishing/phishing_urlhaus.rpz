@@ -75,6 +75,8 @@ allendostmen.com CNAME .
 *.allendostmen.com CNAME .
 allstarstriping.com CNAME .
 *.allstarstriping.com CNAME .
+amuletweb.com CNAME .
+*.amuletweb.com CNAME .
 anapa-zarya.ru CNAME .
 *.anapa-zarya.ru CNAME .
 annadegismen.com CNAME .
@@ -673,8 +675,6 @@ soap.apesirises.com CNAME .
 *.soap.apesirises.com CNAME .
 soft.110route.com CNAME .
 *.soft.110route.com CNAME .
-softcatalog.ru CNAME .
-*.softcatalog.ru CNAME .
 solutelco.com CNAME .
 *.solutelco.com CNAME .
 somautomotivorj.com.br CNAME .
