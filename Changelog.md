@@ -7,8 +7,7 @@ All notable changes to this project will be documented in this file.
 ## [0.4.2] – 2025-06-30
 
 ### Added
-docs: overhaul README.md with new structure and extended documentation
-
+- docs: overhaul README.md with new structure and extended documentation
 - Added clear project overview and feature list
 - Listed all supported input formats for blocklist conversion
 - Documented SOURCES.md columns and status definitions
@@ -17,6 +16,12 @@ docs: overhaul README.md with new structure and extended documentation
 
 ### Changed
 - Update SOURCES.md generation: remove redundant license, use short license names, replace File Path with Source URL, use relative time for Last Updated
+- Enhanced blocklist2rpz-multi.pl:
+- Improved stability for processing 53 sources
+- Added handling for empty lines in urllist.txt
+- Updated source-hashes.csv with new hashes and domain counts
+- Added overwriting of existing RPZ files when content changes are detected (e.g., for renamed or updated sources)
+- Updated `SOURCES.md` generation to show "Last Updated" only for actual content updates, with a new "Last Checked" column for the last check time
 
 ---
 

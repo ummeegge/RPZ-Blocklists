@@ -439,7 +439,7 @@ foreach my $entry (@categorized_sources) {
 		} else {
 			$hashes{$source}{hash} = $new_hash;
 			$hashes{$source}{etag} = $current_etag;
-			$hashes{$source}{last_modified} = $current_last_modified;
+			$hashes{$source}{last_modified} = $current_last_modified || strftime("%Y-%m-%dT%H:%M:%SZ", gmtime); # Fallback to current time if no Last-Modified header
 			$hashes{$source}{failed_attempts} = 0;
 			$hashes{$source}{filename} = $filename; # Update filename in hash
 		}
@@ -495,7 +495,7 @@ foreach my $entry (@categorized_sources) {
 			status      => $skip_update ? 'No Updates' : 'Updated',
 			file_size   => $file_size,
 			file_path   => $file_path,
-			last_updated => strftime("%Y-%m-%d", gmtime),
+			last_updated => $hashes{$source}{last_modified} || strftime("%Y-%m-%dT%H:%M:%SZ", gmtime),
 			license     => $url_to_filename{$source}{comments} ? ($url_to_filename{$source}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
 		};
 		$ok++ unless $skip_update;
@@ -520,7 +520,7 @@ foreach my $entry (@categorized_sources) {
 			status      => 'No Updates',
 			file_size   => $hashes{$source}{file_size} || 0,
 			file_path   => "$category/$filename",
-			last_updated => $hashes{$source}{last_checked} || strftime("%Y-%m-%d", gmtime),
+			last_updated => $hashes{$source}{last_modified} || strftime("%Y-%m-%dT%H:%M:%SZ", gmtime),
 			license     => $url_to_filename{$source}{comments} ? ($url_to_filename{$source}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
 		};
 		$skipped++;
@@ -620,43 +620,63 @@ print $md_fh "# Blocklist Sources Overview\n\n";
 print $md_fh "| RPZ File URL | Last Updated | Category | Entries | Size | License | Source URL | Status |\n";
 print $md_fh "|--------------|--------------|----------|---------|------|---------|------------|--------|\n";
 foreach my $entry (@categorized_sources) {
-	my $url = $entry->{url};
-	my $category = $entry->{category};
-	my $stats = $list_stats{$url} || {
-		domains     => $hashes{$url}{domains} || 0,
-		file_size   => $hashes{$url}{file_size} || 0,
-		status      => 'Not Processed',
-		last_updated => $hashes{$url}{last_checked} || 'Unknown',
-		license     => $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
-		file_path   => $url_to_filename{$url}{filename} ? "$category/" . $url_to_filename{$url}{filename} : 'N/A',
-	};
-	my $status = $stats->{status};
-	my $relative_time = 'Unknown';
-	if ($hashes{$url}{last_checked} && $stats->{last_updated} ne 'Unknown') {
-		my $last_updated = Time::Piece->strptime($hashes{$url}{last_checked}, "%Y-%m-%dT%H:%M:%SZ");
-		my $time_diff = gmtime() - $last_updated;
-		if ((gmtime() - $last_updated) > 30 * 86400) {
-			$status = 'Outdated';
-		}
-		if ($time_diff < 60) {
-			$relative_time = sprintf("%d Seconds", $time_diff);
-		} elsif ($time_diff < 3600) {
-			$relative_time = sprintf("%d Minutes", int($time_diff / 60));
-		} elsif ($time_diff < 86400) {
-			$relative_time = sprintf("%d Hours", int($time_diff / 3600));
-		} else {
-			$relative_time = sprintf("%d Days", int($time_diff / 86400));
-		}
-	}
-	my $rpz_url = $stats->{file_path} eq 'N/A' ? 'N/A' : "[$stats->{file_path}](https://raw.githubusercontent.com/twitOne/RPZ-Blocklists/main/$stats->{file_path})";
-	my $license = $stats->{license};
-	$license =~ s/\s*\(.+?\)//g; # Remove URL from license
-	$license =~ s/\s*License\s*//i; # Remove "License" word if present
-	$license = 'None specified' if $license eq 'Unknown' || $license =~ /^\s*$/;
-	my $source_name = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /Source: ([^\(]+)/ ? $1 : 'Unknown') : 'Unknown';
-	$source_name =~ s/\s+$//; # Trim trailing whitespace
-	my $source_url = "[$source_name]($url)";
-	print $md_fh "| $rpz_url | $relative_time | $category | $stats->{domains} | " . format_file_size($stats->{file_size}) . " | $license | $source_url | $status |\n";
+    my $url = $entry->{url};
+    my $category = $entry->{category};
+    my $stats = $list_stats{$url} || {
+        domains     => $hashes{$url}{domains} || 0,
+        file_size   => $hashes{$url}{file_size} || 0,
+        status      => 'Not Processed',
+        last_updated => $hashes{$url}{last_modified} || ($hashes{$url}{status} eq 'Updated' ? $hashes{$url}{last_checked} : 'Unknown'),
+        license     => $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
+        file_path   => $url_to_filename{$url}{filename} ? "$category/" . $url_to_filename{$url}{filename} : 'N/A',
+    };
+    my $status = $stats->{status};
+    my $relative_time = 'Unknown';
+    if ($stats->{last_updated} && $stats->{last_updated} ne 'Unknown') {
+        my $last_updated;
+        eval {
+            # Try ISO format first
+            $last_updated = Time::Piece->strptime($stats->{last_updated}, "%Y-%m-%dT%H:%M:%SZ");
+        };
+        if ($@ || !$last_updated) {
+            eval {
+                # Fallback to HTTP date format
+                $last_updated = Time::Piece->strptime($stats->{last_updated}, "%a, %d %b %Y %H:%M:%S %Z");
+            };
+        }
+        if ($last_updated) {
+            my $time_diff = gmtime() - $last_updated;
+            my $last_checked;
+            eval {
+                $last_checked = $hashes{$url}{last_checked} ? Time::Piece->strptime($hashes{$url}{last_checked}, "%Y-%m-%dT%H:%M:%SZ") : gmtime();
+            };
+            if ($last_checked && (gmtime() - $last_checked) > 30 * 86400) {
+                $status = 'Outdated';
+            }
+            if ($time_diff < 60) {
+                $relative_time = sprintf("%d Seconds", $time_diff);
+            } elsif ($time_diff < 3600) {
+                $relative_time = sprintf("%d Minutes", int($time_diff / 60));
+            } elsif ($time_diff < 86400) {
+                $relative_time = sprintf("%d Hours", int($time_diff / 3600));
+            } else {
+                $relative_time = sprintf("%d Days", int($time_diff / 86400));
+            }
+        } else {
+            log_message('WARNING', "Invalid time format for $url: $stats->{last_updated}");
+            $relative_time = 'Unknown';
+            $status = 'Outdated' if $hashes{$url}{last_checked} && (gmtime() - Time::Piece->strptime($hashes{$url}{last_checked}, "%Y-%m-%dT%H:%M:%SZ")) > 30 * 86400;
+        }
+    }
+    my $rpz_url = $stats->{file_path} eq 'N/A' ? 'N/A' : "[$stats->{file_path}](https://raw.githubusercontent.com/twitOne/RPZ-Blocklists/main/$stats->{file_path})";
+    my $license = $stats->{license};
+    $license =~ s/\s*\(.+?\)//g; # Remove URL from license
+    $license =~ s/\s*License\s*//i; # Remove "License" word if present
+    $license = 'None specified' if $license eq 'Unknown' || $license =~ /^\s*$/;
+    my $source_name = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /Source: ([^\(]+)/ ? $1 : 'Unknown') : 'Unknown';
+    $source_name =~ s/\s+$//; # Trim trailing whitespace
+    my $source_url = "[$source_name]($url)";
+    print $md_fh "| $rpz_url | $relative_time | $category | $stats->{domains} | " . format_file_size($stats->{file_size}) . " | $license | $source_url | $status |\n";
 }
 print $md_fh "\n## Status Definitions\n";
 print $md_fh "- **Updated**: Source was fetched and RPZ file was updated with new content.\n";
