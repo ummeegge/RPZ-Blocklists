@@ -1131,6 +1131,8 @@ adrt.ru CNAME .
 *.adrt.ru CNAME .
 adsencounters.com CNAME .
 *.adsencounters.com CNAME .
+adservrs.com CNAME .
+*.adservrs.com CNAME .
 adsexpert.net CNAME .
 *.adsexpert.net CNAME .
 adstub.net CNAME .
