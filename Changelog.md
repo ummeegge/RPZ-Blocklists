@@ -22,6 +22,14 @@ All notable changes to this project will be documented in this file.
 - Updated source-hashes.csv with new hashes and domain counts
 - Added overwriting of existing RPZ files when content changes are detected (e.g., for renamed or updated sources)
 - Updated `SOURCES.md` generation to show "Last Updated" only for actual content updates, with a new "Last Checked" column for the last check time
+- Added `last_updated` field in source-hashes.csv to track actual content changes (based on hash/ETag diff)
+- Use `last_updated` for SOURCES.md Last Updated column for accurate change tracking
+- Improved time parsing for SOURCES.md generation
+- Consistent handling of outdated sources with "30+ Days" display
+- Fixed duplicate validation entries in validation.txt
+- Standardized last_updated to ISO format in source-hashes.csv
+- Added Outdated status to status.txt summary
+- Enhanced debug logging for update/skip reasons
 
 ---
 
