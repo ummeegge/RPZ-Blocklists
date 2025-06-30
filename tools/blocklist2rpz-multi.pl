@@ -212,27 +212,27 @@ if ($error_log) {
 my %url_to_filename;
 my %filename_to_url; # Track filename to detect duplicates
 if ($list_mappings) {
-    my $csv = Text::CSV->new({ binary => 1, sep_char => ',', auto_diag => 1 });
-    open my $mfh, '<:encoding(utf8)', $list_mappings or die "Can't open list-mappings file '$list_mappings': $!\n";
-    my $line_num = 0;
-    while (my $row = $csv->getline($mfh)) {
-        $line_num++;
-        log_message('DEBUG', "Processing row $line_num: @$row") if $debug_level >= 2;
-        next unless @$row >= 3;
-        my ($url, $category, $filename, $comments) = @$row;
-        log_message('DEBUG', "Parsed: URL=$url, Category=$category, Filename=$filename, Comments=$comments") if $debug_level >= 2;
-        if ($url_to_filename{$url}) {
-            log_message('WARNING', "Duplicate URL in list-mappings.csv: $url, keeping first entry ($url_to_filename{$url}{filename})");
-            next;
-        }
-        if ($filename_to_url{$filename}) {
-            log_message('WARNING', "Duplicate filename in list-mappings.csv: $filename for URL $url, already used by $filename_to_url{$filename}");
-            next;
-        }
-        $url_to_filename{$url} = { category => $category, filename => $filename, comments => $comments };
-        $filename_to_url{$filename} = $url;
-    }
-    close $mfh;
+	my $csv = Text::CSV->new({ binary => 1, sep_char => ',', auto_diag => 1 });
+	open my $mfh, '<:encoding(utf8)', $list_mappings or die "Can't open list-mappings file '$list_mappings': $!\n";
+	my $line_num = 0;
+	while (my $row = $csv->getline($mfh)) {
+		$line_num++;
+		log_message('DEBUG', "Processing row $line_num: @$row") if $debug_level >= 2;
+		next unless @$row >= 3;
+		my ($url, $category, $filename, $comments) = @$row;
+		log_message('DEBUG', "Parsed: URL=$url, Category=$category, Filename=$filename, Comments=$comments") if $debug_level >= 2;
+		if ($url_to_filename{$url}) {
+			log_message('WARNING', "Duplicate URL in list-mappings.csv: $url, keeping first entry ($url_to_filename{$url}{filename})");
+			next;
+		}
+		if ($filename_to_url{$filename}) {
+			log_message('WARNING', "Duplicate filename in list-mappings.csv: $filename for URL $url, already used by $filename_to_url{$filename}");
+			next;
+		}
+		$url_to_filename{$url} = { category => $category, filename => $filename, comments => $comments };
+		$filename_to_url{$filename} = $url;
+	}
+	close $mfh;
 }
 
 # Load or initialize hash storage
@@ -243,8 +243,8 @@ if (-f $hash_file) {
 	open my $hfh, '<:encoding(utf8)', $hash_file or die "Can't open hash file '$hash_file': $!\n";
 	$csv->getline($hfh); # Skip header
 	while (my $row = $csv->getline($hfh)) {
-		next unless @$row >= 8; # Updated to include domains and file_size
-		my ($url, $hash, $etag, $last_modified, $last_checked, $failed_attempts, $domains, $file_size) = @$row;
+		next unless @$row >= 9; # Updated to include filename
+		my ($url, $hash, $etag, $last_modified, $last_checked, $failed_attempts, $domains, $file_size, $filename) = @$row;
 		$hashes{$url} = {
 			hash           => $hash,
 			etag           => $etag,
@@ -253,6 +253,7 @@ if (-f $hash_file) {
 			failed_attempts => $failed_attempts,
 			domains        => $domains || 0,
 			file_size      => $file_size || 0,
+			filename       => $filename || '',
 		};
 	}
 	close $hfh;
@@ -291,9 +292,6 @@ foreach my $entry (@categorized_sources) {
 	my ($content, $new_hash, $current_etag, $current_last_modified, $skip_update) = ('', '', '', '', 0);
 	my $last_checked = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime);
 
-	# Debug: Confirm URL is processed only once
-	log_message('DEBUG', "Checking URL uniqueness: $source") if $debug_level >= 2;
-
 	# Initialize hash entry if not exists
 	$hashes{$source} ||= {
 		hash           => '',
@@ -303,7 +301,27 @@ foreach my $entry (@categorized_sources) {
 		failed_attempts => 0,
 		domains        => 0,
 		file_size      => 0,
+		filename       => '',
 	};
+
+	# Define filename and output_file early
+	my $filename = $url_to_filename{$source}{filename} || basename($source) . '.rpz';
+	$filename =~ s/\.[a-z]+$/.rpz/i;
+	my $output_file = "$output_dir/$category/$filename";
+	my $output_dir_for_cat = "$output_dir/$category";
+	make_path($output_dir_for_cat) unless -d $output_dir_for_cat;
+
+	# Check for filename changes
+	if (defined $hashes{$source}{filename} && $hashes{$source}{filename} ne $filename && $hashes{$source}{filename} ne '') {
+		log_message('INFO', "Filename for $source changed from $hashes{$source}{filename} to $filename, forcing generation of $output_file");
+		$skip_update = 0; # Force generation
+		my $old_output_file = "$output_dir/$category/$hashes{$source}{filename}";
+		if (-e $old_output_file) {
+			log_message('INFO', "Removing outdated RPZ file: $old_output_file");
+			unlink $old_output_file or log_message('WARNING', "Failed to remove $old_output_file: $!");
+		}
+		$hashes{$source}{filename} = $filename;
+	}
 
 	# Check for GitHub HTML URLs
 	if ($source =~ m{^https?://(?:www\.)?github\.com/.*?(?:blob|raw)/}) {
@@ -319,7 +337,7 @@ foreach my $entry (@categorized_sources) {
 			skipped     => 0,
 			status      => 'Not Reachable',
 			file_size   => $hashes{$source}{file_size} || 0,
-			file_path   => 'N/A',
+			file_path   => "$category/$filename",
 			last_updated => $last_checked,
 			license     => $url_to_filename{$source}{comments} ? ($url_to_filename{$source}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
 		};
@@ -364,12 +382,18 @@ foreach my $entry (@categorized_sources) {
 			skipped     => 0,
 			status      => 'Not Reachable',
 			file_size   => $hashes{$source}{file_size} || 0,
-			file_path   => $url_to_filename{$source}{filename} ? "$category/" . $url_to_filename{$source}{filename} : 'N/A',
+			file_path   => "$category/$filename",
 			last_updated => $last_checked,
 			license     => $url_to_filename{$source}{comments} ? ($url_to_filename{$source}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
 		};
 		$failed++;
 		next;
+	}
+
+	# Check if RPZ file exists to force generation if missing
+	if (! -e $output_file) {
+		log_message('INFO', "RPZ file $output_file does not exist, forcing generation for URL $source");
+		$skip_update = 0; # Force generation by resetting skip_update
 	}
 
 	# Download and hash check
@@ -397,7 +421,7 @@ foreach my $entry (@categorized_sources) {
 				skipped     => 0,
 				status      => 'Not Reachable',
 				file_size   => $hashes{$source}{file_size} || 0,
-				file_path   => $url_to_filename{$source}{filename} ? "$category/" . $url_to_filename{$source}{filename} : 'N/A',
+				file_path   => "$category/$filename",
 				last_updated => $last_checked,
 				license     => $url_to_filename{$source}{comments} ? ($url_to_filename{$source}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
 			};
@@ -417,22 +441,18 @@ foreach my $entry (@categorized_sources) {
 			$hashes{$source}{etag} = $current_etag;
 			$hashes{$source}{last_modified} = $current_last_modified;
 			$hashes{$source}{failed_attempts} = 0;
+			$hashes{$source}{filename} = $filename; # Update filename in hash
 		}
 		$hashes{$source}{last_checked} = $last_checked;
 	}
 
 	# Convert to RPZ format
-		my $entry_count = 0;
-		my $file_path = 'N/A';
-		my $file_size = 0;
-		unless ($skip_update) {
+	my $entry_count = 0;
+	my $file_path = "$category/$filename";
+	my $file_size = 0;
+	unless ($skip_update) {
 		my ($rpz_data, $count) = convert_blocklist_to_rpz($content, $source, $wildcards, $no_soa, $url_to_filename{$source}{comments});
 		$entry_count = $count;
-		my $filename = $url_to_filename{$source}{filename} || basename($source) . '.rpz';
-		$filename =~ s/\.[a-z]+$/.rpz/i;
-		my $output_file = "$output_dir/$category/$filename";
-		my $output_dir_for_cat = "$output_dir/$category";
-		make_path($output_dir_for_cat) unless -d $output_dir_for_cat;
 		# Check if output file exists and compare hash
 		log_message('DEBUG', "Checking if output file exists: $output_file") if $debug_level >= 2;
 		if (-f $output_file) {
@@ -443,14 +463,14 @@ foreach my $entry (@categorized_sources) {
 			$clean_rpz_data =~ s/[^\x00-\x7F]//g; # Remove non-ASCII characters
 			my $new_content_hash = sha256_hex($clean_rpz_data);
 			if ($existing_hash eq $new_content_hash) {
-			log_message('INFO', "Output file $output_file unchanged, skipping write");
-			$skip_update = 1;
-			$file_size = (-s $output_file) / 1024;
-			$file_path = "$category/$filename";
-			$hashes{$source}{domains} = $entry_count;
-			$hashes{$source}{file_size} = $file_size;
+				log_message('INFO', "Output file $output_file unchanged, skipping write");
+				$skip_update = 1;
+				$file_size = (-s $output_file) / 1024;
+				$file_path = "$category/$filename";
+				$hashes{$source}{domains} = $entry_count;
+				$hashes{$source}{file_size} = $file_size;
 			} else {
-			log_message('WARNING', "Output file $output_file exists but content changed, overwriting");
+				log_message('WARNING', "Output file $output_file exists but content changed, overwriting");
 			}
 		}
 		unless ($skip_update) {
@@ -465,6 +485,7 @@ foreach my $entry (@categorized_sources) {
 			log_message('INFO', sprintf("Generated %s: %d entries, %.1f KB", $output_file, $entry_count, $file_size));
 			$hashes{$source}{domains} = $entry_count;
 			$hashes{$source}{file_size} = $file_size;
+			$hashes{$source}{filename} = $filename; # Ensure filename is stored
 		}
 		$list_stats{$source} = {
 			domains     => $entry_count,
@@ -483,14 +504,14 @@ foreach my $entry (@categorized_sources) {
 			log_message('INFO', "Validating $output_file...");
 			my $validation_output = validate_rpz_file($output_file);
 			if ($validation_report) {
-			open my $vfh, '>>:encoding(UTF-8)', $validation_report or die "Cannot open validation report file '$validation_report': $!\n";
-			print $vfh $validation_output;
-			close $vfh;
+				open my $vfh, '>>:encoding(UTF-8)', $validation_report or die "Cannot open validation report file '$validation_report': $!\n";
+				print $vfh $validation_output;
+				close $vfh;
 			} else {
-			print $validation_output;
+				print $validation_output;
 			}
 		}
-		} else {
+	} else {
 		$list_stats{$source} = {
 			domains     => $hashes{$source}{domains} || 0,
 			error       => 0,
@@ -498,75 +519,75 @@ foreach my $entry (@categorized_sources) {
 			skipped     => 1,
 			status      => 'No Updates',
 			file_size   => $hashes{$source}{file_size} || 0,
-			file_path   => $url_to_filename{$source}{filename} ? "$category/" . $url_to_filename{$source}{filename} : 'N/A',
+			file_path   => "$category/$filename",
 			last_updated => $hashes{$source}{last_checked} || strftime("%Y-%m-%d", gmtime),
 			license     => $url_to_filename{$source}{comments} ? ($url_to_filename{$source}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
 		};
 		$skipped++;
-		}
+	}
 
 	$total_domains += $entry_count;
 }
 
 # Write status file
 if ($status_report) {
-    open my $status_fh, '>:encoding(UTF-8)', $status_report or die "Cannot open $status_report: $!\n";
-    $total_time = time - $total_time;
-    printf $status_fh "Processed %d sources: %d OK, %d Skipped, %d Failed, %d total domains in %.2f seconds\n", scalar(@categorized_sources), $ok, $skipped, $failed, $total_domains, $total_time;
-    printf $status_fh "HEAD requests: %d, Full downloads: %d\n\n", $head_requests, $full_downloads;
-    print $status_fh "=" x 80 . "\n";
-    print $status_fh sprintf("%-50s %-11s %-14s %s\n", "List", "Domains", "Time (s)", "Status");
-    print $status_fh "-" x 80 . "\n";
-    foreach my $source (sort keys %list_stats) {
-        my $list_name = $url_to_filename{$source}{filename} || basename(URI->new($source)->path) || URI->new($source)->host;
-        printf $status_fh "%-50s %-11d %-14.2f %s\n", $list_name, $list_stats{$source}{domains}, $list_stats{$source}{time}, $list_stats{$source}{status};
-    }
-    print $status_fh "\nFailed sources:\n" if $failed;
-    foreach my $source (sort keys %list_stats) {
-        print $status_fh "$source\n" if $list_stats{$source}{status} eq 'Not Reachable';
-    }
-    # Write status summary
-    # Explicitly initialize status counts to avoid duplicate lines and ensure robustness
-    my %status_counts = (
-        'Updated' => 0,
-        'No Updates' => 0,
-        'Not Reachable' => 0,
-        'Outdated' => 0,
-    );
-    $status_counts{$list_stats{$_}{status}}++ for keys %list_stats;
-    print $status_fh "\nStatus Summary:\n";
-    print $status_fh "-" x 80 . "\n";
-    for my $status ('Updated', 'No Updates', 'Not Reachable', 'Outdated') {
-        printf $status_fh "%-20s %d\n", $status, $status_counts{$status};
-    }
-    print $status_fh "-" x 80 . "\n";
-    close $status_fh;
+	open my $status_fh, '>:encoding(UTF-8)', $status_report or die "Cannot open $status_report: $!\n";
+	$total_time = time - $total_time;
+	printf $status_fh "Processed %d sources: %d OK, %d Skipped, %d Failed, %d total domains in %.2f seconds\n", scalar(@categorized_sources), $ok, $skipped, $failed, $total_domains, $total_time;
+	printf $status_fh "HEAD requests: %d, Full downloads: %d\n\n", $head_requests, $full_downloads;
+	print $status_fh "=" x 80 . "\n";
+	print $status_fh sprintf("%-50s %-11s %-14s %s\n", "List", "Domains", "Time (s)", "Status");
+	print $status_fh "-" x 80 . "\n";
+	foreach my $source (sort keys %list_stats) {
+		my $list_name = $url_to_filename{$source}{filename} || basename(URI->new($source)->path) || URI->new($source)->host;
+		printf $status_fh "%-50s %-11d %-14.2f %s\n", $list_name, $list_stats{$source}{domains}, $list_stats{$source}{time}, $list_stats{$source}{status};
+	}
+	print $status_fh "\nFailed sources:\n" if $failed;
+	foreach my $source (sort keys %list_stats) {
+		print $status_fh "$source\n" if $list_stats{$source}{status} eq 'Not Reachable';
+	}
+	# Write status summary
+	# Explicitly initialize status counts to avoid duplicate lines and ensure robustness
+	my %status_counts = (
+		'Updated' => 0,
+		'No Updates' => 0,
+		'Not Reachable' => 0,
+		'Outdated' => 0,
+	);
+	$status_counts{$list_stats{$_}{status}}++ for keys %list_stats;
+	print $status_fh "\nStatus Summary:\n";
+	print $status_fh "-" x 80 . "\n";
+	for my $status ('Updated', 'No Updates', 'Not Reachable', 'Outdated') {
+		printf $status_fh "%-20s %d\n", $status, $status_counts{$status};
+	}
+	print $status_fh "-" x 80 . "\n";
+	close $status_fh;
 }
 
 # Clean up old RPZ files not referenced in urllist.txt or list-mappings.csv
 sub cleanup_old_rpz_files {
-    my ($output_dir, $url_to_filename, $categorized_sources) = @_;
-    my %expected_files;
+	my ($output_dir, $url_to_filename, $categorized_sources) = @_;
+	my %expected_files;
 
-    # Build list of expected RPZ files from urllist.txt and list-mappings.csv
-    foreach my $entry (@$categorized_sources) {
-        my $url = $entry->{url};
-        my $category = $entry->{category};
-        my $filename = $url_to_filename->{$url}{filename} || basename(URI->new($url)->path) . '.rpz';
-        $filename =~ s/\.[a-z]+$/.rpz/i;
-        $expected_files{"$output_dir/$category/$filename"} = 1;
-    }
+	# Build list of expected RPZ files from urllist.txt and list-mappings.csv
+	foreach my $entry (@$categorized_sources) {
+		my $url = $entry->{url};
+		my $category = $entry->{category};
+		my $filename = $url_to_filename->{$url}{filename} || basename(URI->new($url)->path) . '.rpz';
+		$filename =~ s/\.[a-z]+$/.rpz/i;
+		$expected_files{"$output_dir/$category/$filename"} = 1;
+	}
 
-    # Check all RPZ files in category directories
-    for my $category_dir (glob "$output_dir/*") {
-        next unless -d $category_dir;
-        for my $file (glob "$category_dir/*.rpz") {
-            unless ($expected_files{$file}) {
-                log_message('INFO', "Removing outdated RPZ file: $file");
-                unlink $file or warn "Failed to delete $file: $!\n";
-            }
-        }
-    }
+	# Check all RPZ files in category directories
+	for my $category_dir (glob "$output_dir/*") {
+		next unless -d $category_dir;
+		for my $file (glob "$category_dir/*.rpz") {
+			unless ($expected_files{$file}) {
+				log_message('INFO', "Removing outdated RPZ file: $file");
+				unlink $file or warn "Failed to delete $file: $!\n";
+			}
+		}
+	}
 }
 
 # Call cleanup function after processing sources
@@ -575,20 +596,21 @@ cleanup_old_rpz_files($output_dir, \%url_to_filename, \@categorized_sources);
 # Save updated hashes
 my $csv = Text::CSV->new({ binary => 1, sep_char => ',', auto_diag => 1 });
 open my $hfh, '>:encoding(utf8)', $hash_file or die "Can't open hash file '$hash_file': $!\n";
-$csv->print($hfh, ['URL', 'Hash', 'ETag', 'Last-Modified', 'Last-Checked', 'Failed-Attempts', 'Domains', 'File-Size']);
+$csv->print($hfh, ['URL', 'Hash', 'ETag', 'Last-Modified', 'Last-Checked', 'Failed-Attempts', 'Domains', 'File-Size', 'Filename']);
 print $hfh "\n";
 foreach my $url (sort keys %hashes) {
-		$csv->print($hfh, [
-				$url,
-				$hashes{$url}{hash},
-				$hashes{$url}{etag},
-				$hashes{$url}{last_modified},
-				$hashes{$url}{last_checked},
-				$hashes{$url}{failed_attempts},
-				$hashes{$url}{domains} || 0,
-				$hashes{$url}{file_size} || 0,
-		]);
-		print $hfh "\n";
+	$csv->print($hfh, [
+		$url,
+		$hashes{$url}{hash},
+		$hashes{$url}{etag},
+		$hashes{$url}{last_modified},
+		$hashes{$url}{last_checked},
+		$hashes{$url}{failed_attempts},
+		$hashes{$url}{domains} || 0,
+		$hashes{$url}{file_size} || 0,
+		$hashes{$url}{filename} || '',
+	]);
+	print $hfh "\n";
 }
 close $hfh;
 
@@ -598,43 +620,43 @@ print $md_fh "# Blocklist Sources Overview\n\n";
 print $md_fh "| RPZ File URL | Last Updated | Category | Entries | Size | License | Source URL | Status |\n";
 print $md_fh "|--------------|--------------|----------|---------|------|---------|------------|--------|\n";
 foreach my $entry (@categorized_sources) {
-    my $url = $entry->{url};
-    my $category = $entry->{category};
-    my $stats = $list_stats{$url} || {
-        domains     => $hashes{$url}{domains} || 0,
-        file_size   => $hashes{$url}{file_size} || 0,
-        status      => 'Not Processed',
-        last_updated => $hashes{$url}{last_checked} || 'Unknown',
-        license     => $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
-        file_path   => $url_to_filename{$url}{filename} ? "$category/" . $url_to_filename{$url}{filename} : 'N/A',
-    };
-    my $status = $stats->{status};
-    my $relative_time = 'Unknown';
-    if ($hashes{$url}{last_checked} && $stats->{last_updated} ne 'Unknown') {
-        my $last_updated = Time::Piece->strptime($hashes{$url}{last_checked}, "%Y-%m-%dT%H:%M:%SZ");
-        my $time_diff = gmtime() - $last_updated;
-        if ((gmtime() - $last_updated) > 30 * 86400) {
-            $status = 'Outdated';
-        }
-        if ($time_diff < 60) {
-            $relative_time = sprintf("%d Seconds", $time_diff);
-        } elsif ($time_diff < 3600) {
-            $relative_time = sprintf("%d Minutes", int($time_diff / 60));
-        } elsif ($time_diff < 86400) {
-            $relative_time = sprintf("%d Hours", int($time_diff / 3600));
-        } else {
-            $relative_time = sprintf("%d Days", int($time_diff / 86400));
-        }
-    }
-    my $rpz_url = $stats->{file_path} eq 'N/A' ? 'N/A' : "[$stats->{file_path}](https://raw.githubusercontent.com/twitOne/RPZ-Blocklists/main/$stats->{file_path})";
-    my $license = $stats->{license};
-    $license =~ s/\s*\(.+?\)//g; # Remove URL from license
-    $license =~ s/\s*License\s*//i; # Remove "License" word if present
-    $license = 'None specified' if $license eq 'Unknown' || $license =~ /^\s*$/;
-    my $source_name = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /Source: ([^\(]+)/ ? $1 : 'Unknown') : 'Unknown';
-    $source_name =~ s/\s+$//; # Trim trailing whitespace
-    my $source_url = "[$source_name]($url)";
-    print $md_fh "| $rpz_url | $relative_time | $category | $stats->{domains} | " . format_file_size($stats->{file_size}) . " | $license | $source_url | $status |\n";
+	my $url = $entry->{url};
+	my $category = $entry->{category};
+	my $stats = $list_stats{$url} || {
+		domains     => $hashes{$url}{domains} || 0,
+		file_size   => $hashes{$url}{file_size} || 0,
+		status      => 'Not Processed',
+		last_updated => $hashes{$url}{last_checked} || 'Unknown',
+		license     => $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
+		file_path   => $url_to_filename{$url}{filename} ? "$category/" . $url_to_filename{$url}{filename} : 'N/A',
+	};
+	my $status = $stats->{status};
+	my $relative_time = 'Unknown';
+	if ($hashes{$url}{last_checked} && $stats->{last_updated} ne 'Unknown') {
+		my $last_updated = Time::Piece->strptime($hashes{$url}{last_checked}, "%Y-%m-%dT%H:%M:%SZ");
+		my $time_diff = gmtime() - $last_updated;
+		if ((gmtime() - $last_updated) > 30 * 86400) {
+			$status = 'Outdated';
+		}
+		if ($time_diff < 60) {
+			$relative_time = sprintf("%d Seconds", $time_diff);
+		} elsif ($time_diff < 3600) {
+			$relative_time = sprintf("%d Minutes", int($time_diff / 60));
+		} elsif ($time_diff < 86400) {
+			$relative_time = sprintf("%d Hours", int($time_diff / 3600));
+		} else {
+			$relative_time = sprintf("%d Days", int($time_diff / 86400));
+		}
+	}
+	my $rpz_url = $stats->{file_path} eq 'N/A' ? 'N/A' : "[$stats->{file_path}](https://raw.githubusercontent.com/twitOne/RPZ-Blocklists/main/$stats->{file_path})";
+	my $license = $stats->{license};
+	$license =~ s/\s*\(.+?\)//g; # Remove URL from license
+	$license =~ s/\s*License\s*//i; # Remove "License" word if present
+	$license = 'None specified' if $license eq 'Unknown' || $license =~ /^\s*$/;
+	my $source_name = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /Source: ([^\(]+)/ ? $1 : 'Unknown') : 'Unknown';
+	$source_name =~ s/\s+$//; # Trim trailing whitespace
+	my $source_url = "[$source_name]($url)";
+	print $md_fh "| $rpz_url | $relative_time | $category | $stats->{domains} | " . format_file_size($stats->{file_size}) . " | $license | $source_url | $status |\n";
 }
 print $md_fh "\n## Status Definitions\n";
 print $md_fh "- **Updated**: Source was fetched and RPZ file was updated with new content.\n";
