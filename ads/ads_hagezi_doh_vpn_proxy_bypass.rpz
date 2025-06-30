@@ -2831,8 +2831,6 @@ socchanpxy.f5.si CNAME .
 *.socchanpxy.f5.si CNAME .
 jp1.f7b6h9.tk CNAME .
 *.jp1.f7b6h9.tk CNAME .
-dns.f97.xyz CNAME .
-*.dns.f97.xyz CNAME .
 idea.lab.fabriquilla25.com CNAME .
 *.idea.lab.fabriquilla25.com CNAME .
 faceless.me CNAME .
@@ -8705,6 +8703,8 @@ guh.uniall.tk CNAME .
 *.guh.uniall.tk CNAME .
 unifiedvpn.com CNAME .
 *.unifiedvpn.com CNAME .
+galileo.math.unipd.it CNAME .
+*.galileo.math.unipd.it CNAME .
 universityproxy.net CNAME .
 *.universityproxy.net CNAME .
 unkn0wngb.lol CNAME .
