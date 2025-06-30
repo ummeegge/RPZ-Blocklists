@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.4.2] – 2025-06-30
+
+### Added
+docs: overhaul README.md with new structure and extended documentation
+
+- Added clear project overview and feature list
+- Listed all supported input formats for blocklist conversion
+- Documented SOURCES.md columns and status definitions
+- Included usage instructions, integration tips, and repo structure
+- Improved guidance for contributors and clarified licensing
+
+### Changed
+- Update SOURCES.md generation: remove redundant license, use short license names, replace File Path with Source URL, use relative time for Last Updated
+
+---
+
 ## [0.4.1] – 2025-06-29
 
 ### Added
