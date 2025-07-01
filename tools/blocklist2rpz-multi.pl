@@ -92,7 +92,7 @@
 # -----------------------------------------------------------------------------
 # Author: ummeegge, with community contributions
 # Contact: twitOne@protonmail.com
-# Version: 0.4.3
+# Version: 0.4.4
 # Last Modified: 2025-07-01
 # License: GNU General Public License v3.0 (GPLv3)
 #   See LICENSE file for full license text.
@@ -323,7 +323,8 @@ sub initialize_hash_entry {
 		domains        => $row ? ($row->[6] || 0) : 0,
 		file_size      => $row ? ($row->[7] || 0) : 0,
 		filename       => $row ? ($row->[8] || '') : '',
-		last_updated   => $row ? convert_to_iso($row->[9] || $row->[3] || $row->[4] || '') : ''
+		last_updated   => $row ? convert_to_iso($row->[9] || $row->[3] || $row->[4] || '') : '',
+		serial_counter => $row ? ($row->[10] || 0) : 0
 	};
 }
 
@@ -470,7 +471,11 @@ foreach my $entry (@categorized_sources) {
 		log_message('DEBUG', "ETag for $source: \"$current_etag\"") if $current_etag && $debug_level >= 2;
 		log_message('DEBUG', "Last-Modified for $source: $current_last_modified") if $current_last_modified && $debug_level >= 2;
 		log_message('DEBUG', "Stored ETag: \"$hashes{$source}{etag}\", Stored Last-Modified: $hashes{$source}{last_modified}") if ($hashes{$source}{etag} || $hashes{$source}{last_modified}) && $debug_level >= 2;
-		if ($current_etag && $hashes{$source}{etag} && $current_etag eq $hashes{$source}{etag}) {
+		# Force update if stored hash is invalid (e.g., all zeros or empty)
+		if ($hashes{$source}{hash} eq '' || $hashes{$source}{hash} =~ /^0+$/) {
+			$skip_update = 0;
+			log_message('DEBUG', "Forcing update for $source: Invalid stored hash ($hashes{$source}{hash})") if $debug_level >= 2;
+		} elsif ($current_etag && $hashes{$source}{etag} && $current_etag eq $hashes{$source}{etag}) {
 			$skip_update = 1;
 			log_message('DEBUG', "Skipping $source: ETag unchanged") if $debug_level >= 2;
 		} elsif ($current_last_modified && $hashes{$source}{last_modified} && $current_last_modified eq $hashes{$source}{last_modified}) {
@@ -501,27 +506,42 @@ foreach my $entry (@categorized_sources) {
 		$new_hash = sha256_hex($content);
 		log_message('DEBUG', "New hash for $source: $new_hash") if $debug_level >= 2;
 		log_message('DEBUG', "Stored hash: $hashes{$source}{hash}") if $hashes{$source}{hash} && $debug_level >= 2;
-		if ($hashes{$source}{hash} && $new_hash eq $hashes{$source}{hash}) {
+		if ($hashes{$source}{hash} && $new_hash eq $hashes{$source}{hash} && $current_etag eq $hashes{$source}{etag}) {
 			$skip_update = 1;
-			log_message('DEBUG', "Skipping $source: Hash unchanged") if $debug_level >= 2;
+			log_message('DEBUG', "Skipping $source: Hash and ETag unchanged") if $debug_level >= 2;
 		} else {
 			$hashes{$source}{hash} = $new_hash;
 			$hashes{$source}{etag} = $current_etag;
 			$hashes{$source}{last_modified} = $current_last_modified || strftime("%Y-%m-%dT%H:%M:%SZ", gmtime);
 			$hashes{$source}{failed_attempts} = 0;
 			$hashes{$source}{filename} = $filename;
+			$hashes{$source}{serial_counter}++; # Inkrementiere hier
+			log_message('DEBUG', "Incremented serial_counter for $source to $hashes{$source}{serial_counter}") if $debug_level >= 2;
 		}
 		$hashes{$source}{last_checked} = $last_checked;
 	}
 
 	# Convert to RPZ format
 	my $entry_count = 0;
-	my $file_path = "$category/$filename";
 	my $file_size = 0;
+	my $file_path = "$category/$filename";
 	unless ($skip_update) {
+		# Check for date change and reset serial_counter if needed
+		my $current_date = strftime("%Y%m%d", gmtime);
+		my $last_updated = $hashes{$source}{last_updated} || '';
+		my $last_date = '';
+		if ($last_updated =~ /^(\d{4})(\d{2})(\d{2})/) {
+			$last_date = "$1$2$3";
+		}
+		if ($last_date && $last_date ne $current_date) {
+			$hashes{$source}{serial_counter} = 1;
+			log_message('DEBUG', "Reset serial_counter for $source to 1 due to date change") if $debug_level >= 2;
+		}
 		my ($rpz_data, $count) = convert_blocklist_to_rpz($content, $source, $wildcards, $no_soa, $url_to_filename{$source}{comments});
 		$entry_count = $count;
 		log_message('DEBUG', "Checking if output file exists: $output_file") if $debug_level >= 2;
+		my $old_serial_counter = $hashes{$source}{serial_counter}; # Speichere alten Counter
+		log_message('DEBUG', "Before processing: serial_counter for $source = $old_serial_counter") if $debug_level >= 2;
 		if (-f $output_file) {
 			my $existing_content = read_file($output_file, binmode => ':raw') || '';
 			$existing_content =~ s/[^\x00-\x7F]//g; # Remove non-ASCII characters
@@ -536,6 +556,7 @@ foreach my $entry (@categorized_sources) {
 				$file_path = "$category/$filename";
 				$hashes{$source}{domains} = $entry_count;
 				$hashes{$source}{file_size} = $file_size;
+				log_message('DEBUG', "Keeping serial_counter for $source at $hashes{$source}{serial_counter} despite unchanged content") if $debug_level >= 2;
 			} else {
 				log_message('WARNING', "Output file $output_file exists but content changed, overwriting");
 			}
@@ -544,6 +565,9 @@ foreach my $entry (@categorized_sources) {
 			my $clean_rpz_data = $rpz_data;
 			$clean_rpz_data =~ s/\x{FEFF}//g; # Remove BOM
 			$clean_rpz_data =~ s/[^\x00-\x7F]//g; # Remove non-ASCII characters
+			my $current_date = strftime("%Y%m%d", gmtime);
+			my $serial = sprintf("%s%02d", $current_date, $hashes{$source}{serial_counter});
+			$clean_rpz_data =~ s/@ SOA localhost\. root\.localhost\. \d+/@ SOA localhost. root.localhost. $serial/;
 			my $fh = open_file($output_file, '>:raw');
 			print $fh $clean_rpz_data;
 			close $fh;
@@ -555,24 +579,21 @@ foreach my $entry (@categorized_sources) {
 			$hashes{$source}{filename} = $filename;
 			$hashes{$source}{last_updated} = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime);
 		}
-		$list_stats{$source} = initialize_list_stats($source, $category, $filename, $entry_count, $list_start, $skip_update, $file_size, \%hashes, \%url_to_filename);
-		$ok++ unless $skip_update;
-		# Validation
-		if ($validate && !$skip_update && !$validated_files{$output_file}) {
-			log_message('INFO', "Validating $output_file...");
-			my $validation_output = validate_rpz_file($output_file);
-			if ($validation_report) {
-				my $vfh = open_file($validation_report, '>>:encoding(UTF-8)');
-				print $vfh $validation_output;
-				close $vfh;
-			} else {
-				print $validation_output;
-			}
-			$validated_files{$output_file} = 1;
+	}
+	$list_stats{$source} = initialize_list_stats($source, $category, $filename, $entry_count, $list_start, $skip_update, $file_size, \%hashes, \%url_to_filename);
+	$ok++ unless $skip_update;
+	# Validation
+	if ($validate && !$skip_update && !$validated_files{$output_file}) {
+		log_message('INFO', "Validating $output_file...");
+		my $validation_output = validate_rpz_file($output_file);
+		if ($validation_report) {
+			my $vfh = open_file($validation_report, '>>:encoding(UTF-8)');
+			print $vfh $validation_output;
+			close $vfh;
+		} else {
+			print $validation_output;
 		}
-	} else {
-		$list_stats{$source} = initialize_list_stats($source, $category, $filename, undef, $list_start, 1, undef, \%hashes, \%url_to_filename);
-		$skipped++;
+		$validated_files{$output_file} = 1;
 	}
 
 	$total_domains += $entry_count;
@@ -651,7 +672,7 @@ cleanup_old_rpz_files($output_dir, \%url_to_filename, \@categorized_sources);
 # Save updated hashes
 my $csv = Text::CSV->new({ binary => 1, sep_char => ',', auto_diag => 1 });
 my $hfh = open_file(HASH_FILE, '>:encoding(utf8)');
-$csv->print($hfh, ['source', 'hash', 'etag', 'last_modified', 'last_checked', 'failed_attempts', 'domains', 'file_size', 'filename', 'last_updated']);
+$csv->print($hfh, ['source', 'hash', 'etag', 'last_modified', 'last_checked', 'failed_attempts', 'domains', 'file_size', 'filename', 'last_updated', 'serial_counter']);
 print $hfh "\n";
 foreach my $url (sort keys %hashes) {
 	$csv->print($hfh, [
@@ -664,7 +685,8 @@ foreach my $url (sort keys %hashes) {
 		$hashes{$url}{domains} || 0,
 		$hashes{$url}{file_size} || 0,
 		$hashes{$url}{filename} || '',
-		convert_to_iso($hashes{$url}{last_updated} || '')
+		convert_to_iso($hashes{$url}{last_updated} || ''),
+		$hashes{$url}{serial_counter} || 0
 	]);
 	print $hfh "\n";
 }
@@ -719,80 +741,81 @@ close $err_fh if $err_fh;
 
 # Convert blocklist to RPZ format
 sub convert_blocklist_to_rpz {
-    my ($content, $source, $wildcards, $no_soa, $comments) = @_;
-    my %seen;
-    my $entry_count = 0;
-    my $rpz_data = '';
-    unless ($no_soa) {
-        my $serial = strftime("%Y%m%d00", gmtime);
-        $rpz_data .= "\$TTL 300\n";
-        $rpz_data .= "@ SOA localhost. root.localhost. $serial 43200 3600 86400 300\n";
-        $rpz_data .= "  NS  localhost.\n";
-    }
-    $rpz_data .= ";\n";
-    $rpz_data .= "; Generated by blocklist2rpz-multi.pl on " . localtime() . "\n";
-    $rpz_data .= "; Source URL: $source\n";
-    $rpz_data .= ";\n";
-    $rpz_data .= "; $comments\n" if $comments;
-    $rpz_data .= ";\n";
-    $rpz_data .= "; Converted by: blocklist2rpz-multi (Perl script)\n";
-    $rpz_data .= "; Source: $source\n";
-    $rpz_data .= "; Wildcards: " . ($wildcards ? "enabled" : "disabled") . "\n";
-    $rpz_data .= "; SOA/NS records: " . ($no_soa ? "disabled" : "enabled") . "\n";
-    $rpz_data .= "; Number of entries: $entry_count\n";
-    $rpz_data .= "; Conversion date: " . localtime() . "\n";
-    $rpz_data .= "; ======================\n";
-    $rpz_data .= ";\n";
-    my @domains;
-    foreach my $line (split /\n/, $content) {
-        chomp $line;
-        my $orig_line = $line; # Originalzeile für Debugging
-        $line =~ s/\r$//;
-        $line =~ s/^\s+|\s+$//g;
-        if ($line =~ /^\s*[#;!]/) { # Handle Adblock Plus comments with !
-            $rpz_data .= "; $line\n";
-            next;
-        }
-        next if $line =~ /^\s*$/;
-        my $domain;
-        foreach my $format (@INPUT_FORMATS) {
-            if ($line =~ $format->{regex}) {
-                $domain = $1;
-                log_message('DEBUG', "Matched format $format->{name} for line: $orig_line, extracted domain: $domain") if $debug_level >= 2;
-                last;
-            }
-        }
-        if (!$domain && $debug_level >= 2) {
-            log_message('DEBUG', "No format matched for line: $orig_line");
-        }
-        next unless $domain;
-        $domain =~ s/^\*\.//;
-        if (!is_valid_domain($domain)) {
-            log_message('DEBUG', "Domain rejected by is_valid_domain: $domain (from line: $orig_line)") if $debug_level >= 2;
-            next;
-        }
-        next if $seen{$domain}++;
-        $rpz_data .= "$domain CNAME .\n";
-        $rpz_data .= "*.$domain CNAME .\n" if $wildcards;
-        push @domains, "$domain";
-        $entry_count++;
-    }
-    if ($entry_count > 0) {
-        log_message('DEBUG', "First 10 domains for $source:\n" . join("\n", @domains[0..($entry_count < 10 ? $entry_count-1 : 9)]));
-    } else {
-        log_message('DEBUG', "No valid domains for $source");
-    }
-    $rpz_data =~ s/Number of entries: \d+/Number of entries: $entry_count/;
-    return ($rpz_data, $entry_count);
+	my ($content, $source, $wildcards, $no_soa, $comments) = @_;
+	my %seen;
+	my $entry_count = 0;
+	my $rpz_data = '';
+	unless ($no_soa) {
+		my $current_date = strftime("%Y%m%d", gmtime);
+		my $serial = sprintf("%s%02d", $current_date, $hashes{$source}{serial_counter});
+		$rpz_data .= "\$TTL 300\n";
+		$rpz_data .= "@ SOA localhost. root.localhost. $serial 43200 3600 86400 300\n";
+		$rpz_data .= "  NS  localhost.\n";
+	}
+	$rpz_data .= ";\n";
+	$rpz_data .= "; Generated by blocklist2rpz-multi.pl on " . localtime() . "\n";
+	$rpz_data .= "; Source URL: $source\n";
+	$rpz_data .= ";\n";
+	$rpz_data .= "; $comments\n" if $comments;
+	$rpz_data .= ";\n";
+	$rpz_data .= "; Converted by: blocklist2rpz-multi (Perl script)\n";
+	$rpz_data .= "; Source: $source\n";
+	$rpz_data .= "; Wildcards: " . ($wildcards ? "enabled" : "disabled") . "\n";
+	$rpz_data .= "; SOA/NS records: " . ($no_soa ? "disabled" : "enabled") . "\n";
+	$rpz_data .= "; Number of entries: $entry_count\n";
+	$rpz_data .= "; Conversion date: " . localtime() . "\n";
+	$rpz_data .= "; ======================\n";
+	$rpz_data .= ";\n";
+	my @domains;
+	foreach my $line (split /\n/, $content) {
+		chomp $line;
+		my $orig_line = $line;
+		$line =~ s/\r$//;
+		$line =~ s/^\s+|\s+$//g;
+		if ($line =~ /^\s*[#;!]/) {
+			$rpz_data .= "; $line\n";
+			next;
+		}
+		next if $line =~ /^\s*$/;
+		my $domain;
+		foreach my $format (@INPUT_FORMATS) {
+			if ($line =~ $format->{regex}) {
+				$domain = $1;
+				log_message('DEBUG', "Matched format $format->{name} for line: $orig_line, extracted domain: $domain") if $debug_level >= 2;
+				last;
+			}
+		}
+		if (!$domain && $debug_level >= 2) {
+			log_message('DEBUG', "No format matched for line: $orig_line");
+		}
+		next unless $domain;
+		$domain =~ s/^\*\.//;
+		if (!is_valid_domain($domain)) {
+			log_message('DEBUG', "Domain rejected by is_valid_domain: $domain (from line: $orig_line)") if $debug_level >= 2;
+			next;
+		}
+		next if $seen{$domain}++;
+		$rpz_data .= "$domain CNAME .\n";
+		$rpz_data .= "*.$domain CNAME .\n" if $wildcards;
+		push @domains, "$domain";
+		$entry_count++;
+	}
+	if ($entry_count > 0) {
+		log_message('DEBUG', "First 10 domains for $source:\n" . join("\n", @domains[0..($entry_count < 10 ? $entry_count-1 : 9)]));
+	} else {
+		log_message('DEBUG', "No valid domains for $source");
+	}
+	$rpz_data =~ s/Number of entries: \d+/Number of entries: $entry_count/;
+	return ($rpz_data, $entry_count);
 }
 
 # Validate domain format
 sub is_valid_domain {
-    my $d = shift;
-    return 0 if $d =~ /^\d+\.\d+\.\d+\.\d+$/; # IPv4
-    return 0 if $d =~ /^\[?[a-fA-F0-9:.]+\]?$/; # IPv6
-    return 0 unless $d =~ /^(?:\*\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
-    return 1;
+	my $d = shift;
+	return 0 if $d =~ /^\d+\.\d+\.\d+\.\d+$/; # IPv4
+	return 0 if $d =~ /^\[?[a-fA-F0-9:.]+\]?$/; # IPv6
+	return 0 unless $d =~ /^(?:\*\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+	return 1;
 }
 
 # Validate RPZ file syntax
