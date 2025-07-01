@@ -7,24 +7,25 @@ All notable changes to this project will be documented in this file.
 ## [0.4.3] - 2025-07-01
 ### Added
 
-- Defined @INPUT_FORMATS array to centralize supported input formats (Hosts, Adblock Plus, Plain Domain, CSV/Tab-separated, URL) for easier extension.
-- Added open_file function to centralize file operations and automatically create directories.
-- Added initialize_list_stats and initialize_hash_entry functions to streamline initialization of %list_stats and %hashes.
-- Added format_relative_time function to unify time formatting for SOURCES.md.
-- Introduced constants (HASH_FILE, SOURCES_MD, STATUS_UPDATED, STATUS_NO_UPDATES, STATUS_NOT_REACHABLE, STATUS_OUTDATED, MAX_FAILED_ATTEMPTS, REPO_URL_BASE) for improved maintainability.
+- Defined @INPUT_FORMATS array to centralize supported input formats (Hosts, Adblock Plus, Plain Domain, CSV/Tab-separated, URL) for easier extension
+- Added open_file function to centralize file operations and automatically create directories
+- Added initialize_list_stats and initialize_hash_entry functions to streamline initialization of %list_stats and %hashes
+- Added format_relative_time function to unify time formatting for SOURCES.md
+- Introduced constants (HASH_FILE, SOURCES_MD, STATUS_UPDATED, STATUS_NO_UPDATES, STATUS_NOT_REACHABLE, STATUS_OUTDATED, MAX_FAILED_ATTEMPTS, REPO_URL_BASE) for improved maintainability
 
 ### Changed
 
-- Refactored convert_blocklist_to_rpz to use @INPUT_FORMATS for domain parsing, improving extensibility and debugging with original line logging.
-- Updated status report generation to use constants for status values and initialize %status_counts explicitly.
-- Improved handle_failed_attempt to use new initialization functions and constants.
-- Combined license cleaning regex in SOURCES.md generation for efficiency.
-- Updated documentation to reference @INPUT_FORMATS for supported input formats.
-- Incremented version to 0.4.3.
+- Refactored convert_blocklist_to_rpz to use @INPUT_FORMATS for domain parsing, improving extensibility and debugging with original line logging
+- Updated status report generation to use constants for status values and initialize %status_counts explicitly
+- Improved handle_failed_attempt to use new initialization functions and constants
+- Combined license cleaning regex in SOURCES.md generation for efficiency
+- Updated documentation to reference @INPUT_FORMATS for supported input formats
+- Incremented version to 0.4.3
 
 ### Fixed
 
-- Fixed Use of uninitialized value warning in status summary by initializing %status_counts with all possible status values using constants.
+- Fixed Use of uninitialized value warning in status summary by initializing %status_counts with all possible status values using constants
+- Fix domain extraction: use correct regex group for domain, not match position
 
 ### Removed
 
