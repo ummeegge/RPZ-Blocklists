@@ -15,6 +15,17 @@ $TTL 300
 ; Conversion date: Wed Jul  2 15:40:44 2025
 ; ======================
 ;
+; ! Title: HaGeZi's TikTok Fingerprinting DNS Blocklist
+; ! Description: Blocks TikTok fingerprinting/tracker that track your activity.
+; ! Homepage: https://github.com/hagezi/dns-blocklists
+; ! License: https://github.com/hagezi/dns-blocklists/blob/main/LICENSE
+; ! Issues: https://github.com/hagezi/dns-blocklists/issues
+; ! Expires: 1 day
+; ! Last modified: 20 Jun 2025 16:07 UTC
+; ! Version: 2025.0620.1607.45
+; ! Syntax: AdBlock
+; ! Number of entries: 322
+; !
 p16-tiktok-ads-sg.tiktokcdn.com.bytegeo.akadns.net CNAME .
 *.p16-tiktok-ads-sg.tiktokcdn.com.bytegeo.akadns.net CNAME .
 frontier.byteoversea.com CNAME .
