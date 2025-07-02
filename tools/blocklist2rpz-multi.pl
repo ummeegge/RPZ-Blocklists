@@ -697,38 +697,54 @@ my $md_fh = open_file(SOURCES_MD, '>:encoding(utf8)');
 print $md_fh "# Blocklist Sources Overview\n\n";
 print $md_fh "| RPZ File URL | Last Updated | Category | Entries | Size | License | Source URL | Status |\n";
 print $md_fh "|--------------|--------------|----------|---------|------|---------|------------|--------|\n";
+
 foreach my $entry (@categorized_sources) {
-	my $url = $entry->{url};
-	my $category = $entry->{category};
-	my $stats = $list_stats{$url} || {
-		domains     => $hashes{$url}{domains} || 0,
-		file_size   => $hashes{$url}{file_size} || 0,
-		status      => 'Not Processed',
-		last_updated => convert_to_iso($hashes{$url}{last_updated} || $hashes{$url}{last_modified} || $hashes{$url}{last_checked} || 'Unknown'),
-		license     => $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown',
-		file_path   => $url_to_filename{$url}{filename} ? "$category/" . $url_to_filename{$url}{filename} : 'N/A',
-	};
-	my $status = $stats->{status};
-	if ($stats->{status} eq STATUS_NO_UPDATES && $stats->{last_updated} && $stats->{last_updated} ne 'Unknown') {
-		my $last_updated;
-		eval {
-			$last_updated = Time::Piece->strptime($stats->{last_updated}, "%Y-%m-%dT%H:%M:%SZ");
-		};
-		if ($last_updated && (gmtime() - $last_updated) > 30 * 86400) {
-			$status = STATUS_OUTDATED;
-			$stats->{status} = STATUS_OUTDATED;
-		}
-	}
-	my $relative_time = format_relative_time($stats->{last_updated}, $hashes{$url}{last_checked});
-	my $rpz_url = $stats->{file_path} eq 'N/A' ? 'N/A' : "[$stats->{file_path}](" . REPO_URL_BASE . "$stats->{file_path})";
-	my $license = $stats->{license};
-	$license =~ s/\s*\(.+?\)|\s*License\s*//gi; # Combine regex operations
-	$license = 'None specified' if $license eq 'Unknown' || $license =~ /^\s*$/;
-	my $source_name = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /Source: ([^\(]+)/ ? $1 : 'Unknown') : 'Unknown';
-	$source_name =~ s/\s+$//; # Trim trailing whitespace
-	my $source_url = "[$source_name]($url)";
-	print $md_fh "| $rpz_url | $relative_time | $category | $stats->{domains} | " . format_file_size($stats->{file_size}) . " | $license | $source_url | $status |\n";
+    my $url      = $entry->{url};
+    my $category = $entry->{category};
+
+    # Use persistent domains and file_size from %hashes
+    my $domains   = $hashes{$url}{domains}    // 0;
+    my $file_size = $hashes{$url}{file_size}  // 0;
+
+    # Determine last updated time from hashes (prefer last_modified)
+    my $last_updated = $hashes{$url}{last_modified} || $hashes{$url}{last_updated} || $hashes{$url}{last_checked} || 'Unknown';
+
+    # Start with status from list_stats if available, else fallback
+    my $status = $list_stats{$url}{status} // 'Not Processed';
+
+    # Override status to Outdated if last_updated is older than 30 days
+    if ($last_updated && $last_updated ne 'Unknown') {
+        my $t;
+        eval {
+            $t = Time::Piece->strptime($last_updated, "%a, %d %b %Y %H:%M:%S %Z");
+        } or eval {
+            $t = Time::Piece->strptime($last_updated, "%a, %d %b %Y %H:%M:%S GMT");
+        } or eval {
+            $t = Time::Piece->strptime($last_updated, "%Y-%m-%dT%H:%M:%SZ");
+        };
+        if ($t && (gmtime() - $t) > 30 * 86400) {
+            $status = STATUS_OUTDATED;
+        }
+    }
+
+    my $relative_time = format_relative_time($last_updated, $hashes{$url}{last_checked});
+
+    my $filename  = $url_to_filename{$url}{filename} || basename(URI->new($url)->path) . '.rpz';
+    $filename     =~ s/\.[a-z]+$/.rpz/i;
+    my $file_path = "$category/$filename";
+    my $rpz_url   = "[$file_path](" . REPO_URL_BASE . "$file_path)";
+
+    my $license = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown';
+    $license =~ s/\s*\(.+?\)|\s*License\s*//gi;
+    $license = 'None specified' if $license eq 'Unknown' || $license =~ /^\s*$/;
+
+    my $source_name = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /Source: ([^\(]+)/ ? $1 : 'Unknown') : 'Unknown';
+    $source_name =~ s/\s+$//;
+    my $source_url = "[$source_name]($url)";
+
+    print $md_fh "| $rpz_url | $relative_time | $category | $domains | " . format_file_size($file_size) . " | $license | $source_url | $status |\n";
 }
+
 print $md_fh "\n## Status Definitions\n";
 print $md_fh "- **" . STATUS_UPDATED . "**: Source was fetched and RPZ file was updated with new content.\n";
 print $md_fh "- **" . STATUS_NO_UPDATES . "**: Source was checked but no changes detected (ETag, Last-Modified, or hash match).\n";

@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.4.5] - 2025-07-02
+
+### Changed
+
+- **SOURCES.md generation:**  
+  - Refactored logic to always display the latest known values for `Entries` (domains) and `Size` from `source-hashes.csv`, ensuring persistent and accurate information even for lists with status `No Updates` or `Outdated`.
+  - Improved status calculation:  
+    - The `Outdated` status is now set for any source whose last update (from HTTP `Last-Modified` header or stored value) is older than 30 days, regardless of current status.
+    - The `No Updates` status is only shown if the list was checked within the last 30 days and no changes were detected.
+  - Last updated time in SOURCES.md now prefers HTTP `Last-Modified` if available, then falls back to stored values.
+  - Enhanced Markdown table consistency and reliability for all sources.
+
+### Fixed
+
+- Fixed missing or zero values for `Entries` and `Size` in SOURCES.md for lists that were not updated in the current run.
+- Fixed incorrect status reporting for lists with old HTTP `Last-Modified` headers (now correctly marked as `Outdated`).
+
+### Performance
+
+- Avoided reading large RPZ files for domain counting; now always uses the persistent values in `source-hashes.csv` for faster and more reliable SOURCES.md generation.
+
+---
+
 ## [0.4.4] - 2025-07-01
 
 ### Added
