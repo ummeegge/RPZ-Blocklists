@@ -1,28 +1,35 @@
 name: Update RPZ Blocklists
 
+# Triggers
 on:
+  # Scheduled run every hour (cron syntax: minute hour day month weekday)
   schedule:
-    - cron: '0 * * * *' # Runs every hour
+    - cron: '0 * * * *'
+  # Run on push to main or feature branches (remove feature branch after merge if not needed)
   push:
     branches:
       - main
       - feature/hash-checking
+  # Allow manual workflow trigger from GitHub UI
   workflow_dispatch:
 
 env:
-  RPZ_DIRS: ads malware misc phishing social tracking # Supported categories, add here new categories if needed
+  # List of supported RPZ categories; update here if categories change
+  RPZ_DIRS: ads malware misc phishing social tracking
 
 jobs:
   update-rpz:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 45 # Prevents hanging jobs
 
     steps:
+      # Step 1: Checkout repository with full history (fetch-depth: 0)
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Step 2: Ensure required input files are present before proceeding
       - name: Pre-check input files
         run: |
           if [ ! -f tools/urllist.txt ]; then
@@ -34,11 +41,13 @@ jobs:
             exit 1
           fi
 
+      # Step 3: Set up Perl environment for script execution
       - name: Set up Perl
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: '5.36'
 
+      # Step 4: Cache CPAN modules for faster dependency installs
       - name: Cache CPAN modules
         uses: actions/cache@v4
         with:
@@ -46,29 +55,34 @@ jobs:
           key: ${{ runner.os }}-cpan-${{ hashFiles('tools/cpanfile') }}
           restore-keys: ${{ runner.os }}-cpan-
 
+      # Step 5: Install Perl dependencies from cpanfile
       - name: Install Perl dependencies
         run: |
           cpanm --installdeps --notest ./tools
         env:
           PERL5LIB: ${{ github.workspace }}/local/lib/perl5:${{ github.workspace }}/local/lib/perl5/x86_64-linux
 
+      # Step 6: Generate RPZ files and logs, using timestamped log filenames
       - name: Generate RPZ files
         id: generate-rpz
         run: |
           export PERLIO=:unix
           mkdir -p tools/logs
+          # Remove old logs for a clean run
           rm -f tools/logs/*.log tools/logs/*.txt
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           perl tools/blocklist2rpz-multi.pl \
             -w \
             -d . \
             -l tools/urllist.txt \
             -m tools/list-mappings.csv \
-            -e tools/logs/error.log \
-            -s tools/logs/status.txt \
+            -e tools/logs/error_${TIMESTAMP}.log \
+            -s tools/logs/status_${TIMESTAMP}.txt \
             --validate \
-            --validation-report tools/logs/validation.txt \
+            --validation-report tools/logs/validation_${TIMESTAMP}.txt \
             --debug-level=1
 
+      # Step 7: Detect outdated sources (not updated in 30+ days) and log them
       - name: Check for outdated sources
         run: |
           perl -MTime::Piece -e '
@@ -96,6 +110,7 @@ jobs:
             }
           '
 
+      # Step 8: Create a GitHub issue if outdated sources are found
       - name: Create issue for outdated sources
         if: always()
         uses: actions/github-script@v6
@@ -113,6 +128,7 @@ jobs:
               });
             }
 
+      # Step 9: Create a GitHub issue for failed sources (fetch errors, hash resets)
       - name: Create issue for failed sources
         if: always()
         uses: actions/github-script@v6
@@ -120,8 +136,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            if (fs.existsSync('tools/logs/error.log')) {
-              const content = fs.readFileSync('tools/logs/error.log', 'utf8');
+            // Use the latest error log (timestamped) if available
+            const logs = fs.readdirSync('tools/logs').filter(f => f.startsWith('error_') && f.endsWith('.log')).sort();
+            const errorLog = logs.length > 0 ? `tools/logs/${logs[logs.length - 1]}` : null;
+            if (errorLog && fs.existsSync(errorLog)) {
+              const content = fs.readFileSync(errorLog, 'utf8');
               if (content.includes('Reset hash') || content.includes('failed for')) {
                 const sources = content.match(/(?:Reset hash for|HEAD request failed for|Could not fetch) (.+?)(?=(?:\n|$| after|:\s))/g) || [];
                 if (sources.length > 0) {
@@ -136,6 +155,7 @@ jobs:
               }
             }
 
+      # Step 10: Commit and push only if there are changes (generated RPZs, hashes, SOURCES.md)
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions Bot"
@@ -144,11 +164,12 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Epic update: Enhanced blocklist2rpz-multi.pl with ETag/Hash change detection, SOURCES.md generation, debug-level control, robust error handling, and sorted urllist/list-mappings for ultimate clarity! ($(date -u))"
+            git commit -m "Automated update: RPZ blocklists ($(date -u))"
             git pull --rebase origin ${{ github.ref_name }}
             git push origin ${{ github.ref_name }}
           fi
 
+      # Step 11: Upload all logs as workflow artifacts for debugging and traceability
       - name: Upload logs as artifacts
         if: always()
         uses: actions/upload-artifact@v4
