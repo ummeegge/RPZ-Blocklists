@@ -16,6 +16,10 @@ All notable changes to this project will be documented in this file.
 - Added correct link to license for lists.cyberhost.uk
 - Corrected script version number
 
+### Improved
+
+- Updated GitHub Actions workflow to prevent merge conflicts using `concurrency` and automatic conflict resolution with `git merge --strategy-option=theirs`
+
 ---
 
 ## [0.4.5] - 2025-07-02
