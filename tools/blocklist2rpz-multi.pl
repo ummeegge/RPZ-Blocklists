@@ -92,7 +92,7 @@
 # -----------------------------------------------------------------------------
 # Author: ummeegge, with community contributions
 # Contact: twitOne@protonmail.com
-# Version: 0.4.4
+# Version: 0.4.5
 # Last Modified: 2025-07-01
 # License: GNU General Public License v3.0 (GPLv3)
 #   See LICENSE file for full license text.

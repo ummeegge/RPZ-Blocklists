@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.4.5] - 2025-07-03
+
+### Added
+
+- easylist adservers popup list
+- urlhaus filter via malware-filter
+
+### Fixed
+
+- Added correct link to license for lists.cyberhost.uk
+- Corrected script version number
+
+---
+
 ## [0.4.5] - 2025-07-02
 
 ### Changed
