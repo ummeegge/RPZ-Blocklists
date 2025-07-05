@@ -43,9 +43,18 @@ The converter supports a wide range of input formats, including:
 - Wildcard domains: *.domain.tld
 - CSV/tab-separated: domain.tld,<other> or domain.tld<TAB><other>
 - URLs: https://domain.tld/...
+- RPZ (Response Policy Zone) formats: supports multiple RPZ record types such as CNAME, NXDOMAIN, DROP, NODATA, PASSTHRU, TXT, A, AAAA
 - Comments: Lines starting with # or ;
 
 All formats can be mixed within a single source file. Invalid or duplicate domains are skipped automatically.
+
+### Additional Features
+
+- Flexible and dynamic regex group handling allows precise extraction of domains from diverse formats.
+- Native support for wildcard domains in regex patterns.
+- Automatic conversion of Unicode (IDN) domains to Punycode for proper RPZ output.
+- Enhanced debug logging for improved traceability during format parsing.
+- Support for new RPZ formatted lists, including those from Hagezi and Easylist.
 
 ## Repository Structure
 

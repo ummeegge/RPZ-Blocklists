@@ -28,6 +28,11 @@ All notable changes to this project will be documented in this file.
 
 - Codebase is now ready for further RPZ action types and flexible input parsing.
 
+### Added
+
+- Hagezi ulimate und pro lists
+- Easylist trackingservers_international
+
 ---
 
 ## [0.4.5] - 2025-07-03
