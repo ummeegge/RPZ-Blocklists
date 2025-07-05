@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.4.6] - 2025-07-04
+
+### Added
+
+- **Flexible RPZ input format support:**  
+  - Added parsing for multiple RPZ actions: CNAME, NXDOMAIN, DROP, NODATA, PASSTHRU, TXT, A, AAAA.
+  - Input format definitions now allow specifying which regex group to extract (group field).
+  - Unicode domain support: automatic conversion to Punycode for all output domains.
+
+### Changed
+
+- Refactored input format matching to use dynamic group extraction, enabling support for complex formats and future extensions.
+- Improved wildcard handling and detection: wildcards are now recognized and handled directly by the regex.
+- Enhanced debug logging for input format matching and extracted values.
+
+### Fixed
+
+- Fixed issues where wildcards or certain domain formats were not matched or extracted correctly.
+- Improved error handling and reporting for invalid or unexpected input lines.
+
+### Improved
+
+- Codebase is now ready for further RPZ action types and flexible input parsing.
+
+---
+
 ## [0.4.5] - 2025-07-03
 
 ### Added
@@ -231,4 +257,5 @@ Incremented version to 0.4.4
 
 ### Added
 - Introduce `Changelog.md` version with basic functionality from version 1.2
+
 

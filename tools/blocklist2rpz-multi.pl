@@ -22,6 +22,8 @@
 #   - Generates SOURCES.md with source overview, including persistent stats
 #   - Handles unreachable sources with retry logic (reset hash after 3 failed attempts)
 #   - Debug level control (--debug-level=[0|1|2])
+#   - Supports Unicode domains (e.g., münchen.de) by converting to Punycode
+#		(e.g., xn--mnchen-3ya.de) using Encode::Punycode
 #
 # -----------------------------------------------------------------------------
 # Supported Input Formats:
@@ -86,14 +88,14 @@
 # Dependencies:
 #   - Perl 5.10 or newer
 #   - Core modules: strict, warnings, Getopt::Long, POSIX, File::Basename,
-#     File::Path, URI, open, Time::Piece, Encode
+#     File::Path, URI, open, Time::Piece, Encode (with Encode::Punycode)
 #   - CPAN modules: LWP::UserAgent, Text::CSV, Digest::SHA, File::Slurp
 #
 # -----------------------------------------------------------------------------
 # Author: ummeegge, with community contributions
 # Contact: twitOne@protonmail.com
-# Version: 0.4.5
-# Last Modified: 2025-07-01
+# Version: 0.4.6
+# Last Modified: 2025-07-04
 # License: GNU General Public License v3.0 (GPLv3)
 #   See LICENSE file for full license text.
 #
@@ -117,40 +119,83 @@ use Encode;
 # Input format definitions for blocklist conversion to RPZ
 # This array defines supported input formats for parsing blocklist entries.
 # Each format includes:
-# - name: Descriptive name for logging and debugging.
-# - regex: Regular expression to match the input line and capture the domain.
-# - group: Capture group index containing the domain (usually 1).
+# - name:    Descriptive name for logging and debugging.
+# - regex:   Regular expression to match the input line and capture the domain (and optionally action/text).
+# - group:   Capture group index containing the domain (usually 1 or 2).
 # To add a new format, append a new hash with these fields.
 # Example for a custom format: { name => 'Custom', regex => qr/^([^\s]+?\.[^\s]+?)#block/, group => 1 }
 my @INPUT_FORMATS = (
 	{
-		name   => 'Hosts',                           # e.g., "0.0.0.0 example.com"
+		name   => 'Hosts',  # e.g., "0.0.0.0 example.com"
 		regex  => qr/^\s*(?:0\.0\.0\.0|127\.0\.0\.1)\s+([^\s]+)/,
 		group  => 1,
 	},
 	{
-		name   => 'Adblock Plus',                    # e.g., "||example.com^"
+		name   => 'Adblock Plus',  # e.g., "||example.com^"
 		regex  => qr/^\|\|([^\^]+)\^/,
 		group  => 1,
 	},
 	{
-		name   => 'Plain Domain',                    # e.g., "example.com" or "*.example.com"
+		name   => 'Plain Domain',  # e.g., "example.com" or "*.example.com"
 		regex  => qr/^(\*?[^\s]+?\.[^\s]+?)\s*(?:[#;].*)?$/,
 		group  => 1,
 	},
 	{
-		name   => 'CSV/Tab-separated',               # e.g., "example.com,category" or "example.com\tcategory"
+		name   => 'CSV/Tab-separated',  # e.g., "example.com,category" or "example.com\tcategory"
 		regex  => qr/^(\*?[^\s]+?\.[^\s]+?)[,\t]/,
 		group  => 1,
 	},
 	{
-		name   => 'URL',                             # e.g., "https://example.com/"
-		regex  => qr{^https?://(\*?[^\s]+?\.[^\s]+?)(?:/|$)},
+		name   => 'URL',  # e.g., "https://example.com", "http://sub.example.co.uk/path", "https://*.xn--mnchen-3ya.de"
+		regex  => qr{^https?://((?:[a-zA-Z0-9_-]+\.)*[a-zA-Z0-9_-]+\.[a-zA-Z0-9-]{2,})(?:/.*)?$},
 		group  => 1,
 	},
+
+	# RPZ formats
+	{
+		name   => 'RPZ CNAME',  # e.g., "example.com CNAME .", "*.example.com CNAME ."
+		regex  => qr/^(\*\.)?((?:[a-zA-Z0-9_-]+\.)+[a-zA-Z0-9-]{2,})\s+CNAME\s+\.$/,
+		group  => 2,  # group 2 = domain (without wildcard), group 1 = wildcard if present
+	},
+	{
+		name   => 'RPZ NXDOMAIN',  # e.g., "example.com NXDOMAIN .", "*.example.com NXDOMAIN ."
+		regex  => qr/^(\*\.)?((?:[a-zA-Z0-9_-]+\.)+[a-zA-Z0-9-]{2,})\s+NXDOMAIN\s+\.$/,
+		group  => 2,
+	},
+	{
+		name   => 'RPZ DROP',  # e.g., "example.com DROP ."
+		regex  => qr/^(\*\.)?((?:[a-zA-Z0-9_-]+\.)+[a-zA-Z0-9-]{2,})\s+DROP\s+\.$/,
+		group  => 2,
+	},
+	{
+		name   => 'RPZ NODATA',  # e.g., "example.com NODATA ."
+		regex  => qr/^(\*\.)?((?:[a-zA-Z0-9_-]+\.)+[a-zA-Z0-9-]{2,})\s+NODATA\s+\.$/,
+		group  => 2,
+	},
+	{
+		name   => 'RPZ PASSTHRU',  # e.g., "example.com PASSTHRU ."
+		regex  => qr/^(\*\.)?((?:[a-zA-Z0-9_-]+\.)+[a-zA-Z0-9-]{2,})\s+PASSTHRU\s+\.$/,
+		group  => 2,
+	},
+	{
+		name   => 'RPZ TXT',  # e.g., "example.com TXT \"some text\""
+		regex  => qr/^(\*\.)?((?:[a-zA-Z0-9_-]+\.)+[a-zA-Z0-9-]{2,})\s+TXT\s+"(.*?)"$/,
+		group  => 2,  # group 2 = domain, group 3 = TXT content
+	},
+	{
+		name   => 'RPZ A',  # e.g., "example.com A 127.0.0.1"
+		regex  => qr/^(\*\.)?((?:[a-zA-Z0-9_-]+\.)+[a-zA-Z0-9-]{2,})\s+A\s+(\d{1,3}(?:\.\d{1,3}){3})$/,
+		group  => 2,  # group 2 = domain, group 3 = IP
+	},
+	{
+		name   => 'RPZ AAAA',  # e.g., "example.com AAAA 2001:db8::1"
+		regex  => qr/^(\*\.)?((?:[a-zA-Z0-9_-]+\.)+[a-zA-Z0-9-]{2,})\s+AAAA\s+([0-9a-fA-F:]+)$/,
+		group  => 2,  # group 2 = domain, group 3 = IPv6
+	},
+
 	# Add new formats here, e.g.:
 	# {
-	#     name   => 'Custom Block',                # e.g., "example.com#block"
+	#     name   => 'Custom Block',  # e.g., "example.com#block"
 	#     regex  => qr/^([^\s]+?\.[^\s]+?)#block/,
 	#     group  => 1,
 	# },
@@ -699,50 +744,50 @@ print $md_fh "| RPZ File URL | Last Updated | Category | Entries | Size | Licens
 print $md_fh "|--------------|--------------|----------|---------|------|---------|------------|--------|\n";
 
 foreach my $entry (@categorized_sources) {
-    my $url      = $entry->{url};
-    my $category = $entry->{category};
+	my $url      = $entry->{url};
+	my $category = $entry->{category};
 
-    # Use persistent domains and file_size from %hashes
-    my $domains   = $hashes{$url}{domains}    // 0;
-    my $file_size = $hashes{$url}{file_size}  // 0;
+	# Use persistent domains and file_size from %hashes
+	my $domains   = $hashes{$url}{domains}    // 0;
+	my $file_size = $hashes{$url}{file_size}  // 0;
 
-    # Determine last updated time from hashes (prefer last_modified)
-    my $last_updated = $hashes{$url}{last_modified} || $hashes{$url}{last_updated} || $hashes{$url}{last_checked} || 'Unknown';
+	# Determine last updated time from hashes (prefer last_modified)
+	my $last_updated = $hashes{$url}{last_modified} || $hashes{$url}{last_updated} || $hashes{$url}{last_checked} || 'Unknown';
 
-    # Start with status from list_stats if available, else fallback
-    my $status = $list_stats{$url}{status} // 'Not Processed';
+	# Start with status from list_stats if available, else fallback
+	my $status = $list_stats{$url}{status} // 'Not Processed';
 
-    # Override status to Outdated if last_updated is older than 30 days
-    if ($last_updated && $last_updated ne 'Unknown') {
-        my $t;
-        eval {
-            $t = Time::Piece->strptime($last_updated, "%a, %d %b %Y %H:%M:%S %Z");
-        } or eval {
-            $t = Time::Piece->strptime($last_updated, "%a, %d %b %Y %H:%M:%S GMT");
-        } or eval {
-            $t = Time::Piece->strptime($last_updated, "%Y-%m-%dT%H:%M:%SZ");
-        };
-        if ($t && (gmtime() - $t) > 30 * 86400) {
-            $status = STATUS_OUTDATED;
-        }
-    }
+	# Override status to Outdated if last_updated is older than 30 days
+	if ($last_updated && $last_updated ne 'Unknown') {
+		my $t;
+		eval {
+			$t = Time::Piece->strptime($last_updated, "%a, %d %b %Y %H:%M:%S %Z");
+		} or eval {
+			$t = Time::Piece->strptime($last_updated, "%a, %d %b %Y %H:%M:%S GMT");
+		} or eval {
+			$t = Time::Piece->strptime($last_updated, "%Y-%m-%dT%H:%M:%SZ");
+		};
+		if ($t && (gmtime() - $t) > 30 * 86400) {
+			$status = STATUS_OUTDATED;
+		}
+	}
 
-    my $relative_time = format_relative_time($last_updated, $hashes{$url}{last_checked});
+	my $relative_time = format_relative_time($last_updated, $hashes{$url}{last_checked});
 
-    my $filename  = $url_to_filename{$url}{filename} || basename(URI->new($url)->path) . '.rpz';
-    $filename     =~ s/\.[a-z]+$/.rpz/i;
-    my $file_path = "$category/$filename";
-    my $rpz_url   = "[$file_path](" . REPO_URL_BASE . "$file_path)";
+	my $filename  = $url_to_filename{$url}{filename} || basename(URI->new($url)->path) . '.rpz';
+	$filename     =~ s/\.[a-z]+$/.rpz/i;
+	my $file_path = "$category/$filename";
+	my $rpz_url   = "[$file_path](" . REPO_URL_BASE . "$file_path)";
 
-    my $license = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown';
-    $license =~ s/\s*\(.+?\)|\s*License\s*//gi;
-    $license = 'None specified' if $license eq 'Unknown' || $license =~ /^\s*$/;
+	my $license = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown';
+	$license =~ s/\s*\(.+?\)|\s*License\s*//gi;
+	$license = 'None specified' if $license eq 'Unknown' || $license =~ /^\s*$/;
 
-    my $source_name = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /Source: ([^\(]+)/ ? $1 : 'Unknown') : 'Unknown';
-    $source_name =~ s/\s+$//;
-    my $source_url = "[$source_name]($url)";
+	my $source_name = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /Source: ([^\(]+)/ ? $1 : 'Unknown') : 'Unknown';
+	$source_name =~ s/\s+$//;
+	my $source_url = "[$source_name]($url)";
 
-    print $md_fh "| $rpz_url | $relative_time | $category | $domains | " . format_file_size($file_size) . " | $license | $source_url | $status |\n";
+	print $md_fh "| $rpz_url | $relative_time | $category | $domains | " . format_file_size($file_size) . " | $license | $source_url | $status |\n";
 }
 
 print $md_fh "\n## Status Definitions\n";
@@ -755,10 +800,28 @@ close $md_fh;
 # Close error log
 close $err_fh if $err_fh;
 
+# Convert Unicode domains to Punycode
+sub convert_to_punycode {
+	my ($domain) = @_;
+	if ($domain =~ /[^\x00-\x7F]/) { # Contains non-ASCII characters
+		eval {
+			my $punycode = encode('Punycode', $domain);
+			$punycode = "xn--$punycode" if $punycode !~ /^xn--/;
+			log_message('DEBUG', "Converted $domain to Punycode: $punycode") if $debug_level >= 2;
+			return $punycode;
+		} or do {
+			log_message('WARNING', "Could not convert '$domain' to Punycode: $@. Ensure the domain contains valid Unicode characters.");
+			return undef;
+		};
+	}
+	return $domain;
+}
+
 # Convert blocklist to RPZ format
 sub convert_blocklist_to_rpz {
 	my ($content, $source, $wildcards, $no_soa, $comments) = @_;
 	my %seen;
+	my %seen_wildcard; # Track wildcard entries separately
 	my $entry_count = 0;
 	my $rpz_data = '';
 	unless ($no_soa) {
@@ -781,7 +844,6 @@ sub convert_blocklist_to_rpz {
 	$rpz_data .= "; Number of entries: $entry_count\n";
 	$rpz_data .= "; Conversion date: " . localtime() . "\n";
 	$rpz_data .= "; ======================\n";
-	$rpz_data .= ";\n";
 	my @domains;
 	foreach my $line (split /\n/, $content) {
 		chomp $line;
@@ -796,7 +858,10 @@ sub convert_blocklist_to_rpz {
 		my $domain;
 		foreach my $format (@INPUT_FORMATS) {
 			if ($line =~ $format->{regex}) {
-				$domain = $1;
+				my $group = $format->{group} || 1;
+				no strict 'refs';
+				$domain = ${$group};
+				use strict 'refs';
 				log_message('DEBUG', "Matched format $format->{name} for line: $orig_line, extracted domain: $domain") if $debug_level >= 2;
 				last;
 			}
@@ -805,16 +870,31 @@ sub convert_blocklist_to_rpz {
 			log_message('DEBUG', "No format matched for line: $orig_line");
 		}
 		next unless $domain;
-		$domain =~ s/^\*\.//;
+		my $is_wildcard = $domain =~ s/^\*\.//; # Remove *. and track if it was a wildcard
+		$domain = convert_to_punycode($domain);
+		next unless $domain; # Skip if Punycode conversion failed
 		if (!is_valid_domain($domain)) {
+			log_message('WARNING', "Invalid domain: $domain (from line: $orig_line)");
 			log_message('DEBUG', "Domain rejected by is_valid_domain: $domain (from line: $orig_line)") if $debug_level >= 2;
 			next;
 		}
-		next if $seen{$domain}++;
-		$rpz_data .= "$domain CNAME .\n";
-		$rpz_data .= "*.$domain CNAME .\n" if $wildcards;
-		push @domains, "$domain";
-		$entry_count++;
+		if ($is_wildcard) {
+			next if $seen_wildcard{$domain}++; # Skip duplicate wildcard entries
+			$rpz_data .= "*.$domain CNAME .\n";
+			$entry_count++;
+			push @domains, "*.$domain";
+		} else {
+			next if $seen{$domain}++; # Skip duplicate non-wildcard entries
+			$rpz_data .= "$domain CNAME .\n";
+			$entry_count++;
+			push @domains, "$domain";
+			if ($wildcards && !$seen_wildcard{$domain}) {
+				$rpz_data .= "*.$domain CNAME .\n";
+				$seen_wildcard{$domain}++; # Mark wildcard as seen to prevent duplicates
+				$entry_count++;
+				push @domains, "*.$domain";
+			}
+		}
 	}
 	if ($entry_count > 0) {
 		log_message('DEBUG', "First 10 domains for $source:\n" . join("\n", @domains[0..($entry_count < 10 ? $entry_count-1 : 9)]));
@@ -829,9 +909,10 @@ sub convert_blocklist_to_rpz {
 sub is_valid_domain {
 	my $d = shift;
 	return 0 if $d =~ /^\d+\.\d+\.\d+\.\d+$/; # IPv4
-	return 0 if $d =~ /^\[?[a-fA-F0-9:.]+\]?$/; # IPv6
-	return 0 unless $d =~ /^(?:\*\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
-	return 1;
+	return 0 if $d =~ /^\[?[a-fA-F0-9:.]+\]?$/ && $d !~ /\.[a-zA-Z]{2,}$/; # IPv6
+	return 1 if $d =~ /^(?:\*\.)?(?:[a-zA-Z0-9_-]+\.)*[a-zA-Z0-9_-]+\.[a-zA-Z0-9-]{2,}$/;
+	log_message('WARNING', "Invalid domain: $d") if $debug_level >= 1;
+	return 0;
 }
 
 # Validate RPZ file syntax
@@ -847,7 +928,7 @@ sub validate_rpz_file {
 		next if $line =~ /^\$TTL/;       # Skip TTL directives
 		next if $line =~ /^@/ && !$no_soa;  # Allow SOA entries
 		next if $line =~ /^\s*NS\s+localhost\.$/ && !$no_soa;  # Allow NS entries
-		unless ($line =~ /^[a-zA-Z0-9\-\*\.]+\s+CNAME\s+\.$/) {
+		unless ($line =~ /^[a-zA-Z0-9_\-\*\.]+\s+CNAME\s+\.$/) {
 			$output .= "Invalid RPZ entry at line $line_num: $line\n";
 		}
 	}
@@ -856,4 +937,4 @@ sub validate_rpz_file {
 	return $output;
 }
 
-exit 0;
+exit 0
