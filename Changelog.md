@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.4.7] - 2025-07-06
+
+### Changed
+
+- Updated `blocklist2rpz-multi.pl` to include optional license annotations in parentheses (e.g., `(custom note)`) as part of the license name in `SOURCES.md` (e.g., `[CC BY-SA (custom note)](https://dsi.ut-capitole.fr/blacklists/)`).
+- Modified license parsing regex to capture annotations in parentheses as part of the license name.
+- Updated `README.md` to:
+  - Clarify support for multiple licenses (comma-separated) and annotations in parentheses in `SOURCES.md` and RPZ file headers.
+  - Add detailed syntax guide for `list-mappings.csv`, explaining the use of commas for multiple licenses and parentheses for annotations, with examples.
+  - Improve clarity for contributors adding new sources to `list-mappings.csv` by describing the role of commas and parentheses.
+
+ ---
+
 ## [0.4.6] - 2025-07-04
 
 ### Added
@@ -262,5 +275,6 @@ Incremented version to 0.4.4
 
 ### Added
 - Introduce `Changelog.md` version with basic functionality from version 1.2
+
 
 

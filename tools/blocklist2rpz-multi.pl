@@ -94,8 +94,8 @@
 # -----------------------------------------------------------------------------
 # Author: ummeegge, with community contributions
 # Contact: twitOne@protonmail.com
-# Version: 0.4.6
-# Last Modified: 2025-07-04
+# Version: 0.4.7
+# Last Modified: 2025-07-06
 # License: GNU General Public License v3.0 (GPLv3)
 #   See LICENSE file for full license text.
 #
@@ -740,8 +740,8 @@ close $hfh;
 # Generate SOURCES.md
 my $md_fh = open_file(SOURCES_MD, '>:encoding(utf8)');
 print $md_fh "# Blocklist Sources Overview\n\n";
-print $md_fh "| RPZ File URL | Last Updated | Category | Entries | Size | License | Source URL | Status |\n";
-print $md_fh "|--------------|--------------|----------|---------|------|---------|------------|--------|\n";
+print $md_fh "| RPZ File URL | Last Updated | Category | Entries | Size | Status | Source URL | License |\n";
+print $md_fh "|--------------|--------------|----------|---------|------|--------|------------|---------|\n";
 
 foreach my $entry (@categorized_sources) {
 	my $url      = $entry->{url};
@@ -779,15 +779,30 @@ foreach my $entry (@categorized_sources) {
 	my $file_path = "$category/$filename";
 	my $rpz_url   = "[$file_path](" . REPO_URL_BASE . "$file_path)";
 
-	my $license = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /License: ([^;]+)/ ? $1 : 'Unknown') : 'Unknown';
-	$license =~ s/\s*\(.+?\)|\s*License\s*//gi;
-	$license = 'None specified' if $license eq 'Unknown' || $license =~ /^\s*$/;
+# Extract multiple licenses and URLs from comments
+	my @licenses;
+	if ($url_to_filename{$url}{comments} && $url_to_filename{$url}{comments} =~ /License: (.+?)(?:; Source:|$)/i) {
+		my $license_str = $1;
+		while ($license_str =~ /([^\(]+?(?:\s*\([^\)]+\))?)\s*(?:\((https?:\/\/[^\)]+)\))?(?:\s*,\s*|$)/gi) {
+			my $license_name = $1;
+			my $license_url = $2 // '';
+			$license_name =~ s/\s+$//; # Trim trailing whitespace
+			push @licenses, { name => $license_name, url => $license_url };
+		}
+	}
+	# Create display string for licenses (comma-separated Markdown links or names)
+	my $license_display = @licenses ? join(', ', map {
+		$_->{url} ? "[$_->{name}]($_->{url})" : $_->{name}
+	} @licenses) : 'None specified';
+
+	# Ensure license_display is not empty
+	$license_display = 'None specified' unless $license_display;
 
 	my $source_name = $url_to_filename{$url}{comments} ? ($url_to_filename{$url}{comments} =~ /Source: ([^\(]+)/ ? $1 : 'Unknown') : 'Unknown';
 	$source_name =~ s/\s+$//;
 	my $source_url = "[$source_name]($url)";
 
-	print $md_fh "| $rpz_url | $relative_time | $category | $domains | " . format_file_size($file_size) . " | $license | $source_url | $status |\n";
+	print $md_fh "| $rpz_url | $relative_time | $category | $domains | " . format_file_size($file_size) . " | $status | $source_url | $license_display |\n";
 }
 
 print $md_fh "\n## Status Definitions\n";
@@ -938,3 +953,4 @@ sub validate_rpz_file {
 }
 
 exit 0
+

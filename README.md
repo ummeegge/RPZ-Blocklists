@@ -31,7 +31,8 @@ This repository provides categorized, automatically updated Response Policy Zone
 - Robust Error Handling: Logs failed or unreachable sources to tools/logs/error.log and creates GitHub issues for outdated/failed sources.
 - Customizable: Supports wildcards (*.<domain>), custom filenames via tools/list-mappings.csv, and debug levels.
 - Performance: Efficient processing with cached Perl modules and retry logic for failed sources.
-- License Clarity: Includes license information in RPZ file headers, sourced from tools/list-mappings.csv.
+- License Clarity: Includes license information with optional annotations in parentheses (e.g., "(custom)") and support for multiple licenses (comma-separated) in RPZ file headers and SOURCES.md, sourced from tools/list-mappings.csv.
+- Extensible License Format: Supports flexible license definitions in tools/list-mappings.csv, using parentheses for annotations and commas for multiple licenses.
 
 ## Supported Blocklist Formats
 
@@ -100,6 +101,26 @@ RPZ-Blocklists/
 - Edit `tools/urllist.txt` to add or remove sources in `,` format (e.g., `ads,https://example.org/hosts.txt`).
 - Map sources to custom filenames and licenses in `tools/list-mappings.csv` (format: `,,,`).
 - Add new categories to `RPZ_DIRS` in `.github/workflows/update-rpz.yml`.
+
+- Specify licenses in `tools/list-mappings.csv` using the following syntax:
+  - Single license: `License: <name> (<url>)`, e.g., `License: MIT (https://example.com/license)`
+  - Single license with annotation in parentheses: `License: <name> (<annotation>) (<url>)`, e.g., `License: CC BY-SA (custom note) (https://example.com/license)`
+  - Multiple licenses (comma-separated): `License: <name1> (<url1>), <name2> (<url2>)`, e.g., `License: GPLv3 (https://easylist.to/pages/licence.html), CC BY-SA (https://creativecommons.org/licenses/by-sa/3.0/)`
+  - Multiple licenses with annotations: `License: <name1> (<annotation1>) (<url1>), <name2> (<annotation2>) (<url2>)`, e.g., `License: GPLv3 (recommended) (https://easylist.to/pages/licence.html), CC BY-SA (alternate) (https://creativecommons.org/licenses/by-sa/3.0/)`
+  - License without URL: `License: <name>`, e.g., `License: None specified`
+  - Example `list-mappings.csv` entries:
+    ```
+    https://v.firebog.net/hosts/Easylist.txt,ads,ads_easylist.rpz,"License: GPLv3 (https://easylist.to/pages/licence.html), CC BY-SA (https://creativecommons.org/licenses/by-sa/3.0/); Source: EasyList (https://easylist.to/)"
+    https://v.firebog.net/hosts/Prigent-Ads.txt,ads,ads_prigent_ads.rpz,"License: CC BY-SA (custom note) (https://dsi.ut-capitole.fr/blacklists/); Source: Fabrice Prigent via Firebog (https://dsi.ut-capitole.fr/blacklists/)"
+    ```
+  - Notes:
+    - **Commas** separate multiple licenses within the `License:` field.
+    - **Parentheses** (`()`) are used to include optional annotations as part of the license name (e.g., `(custom note)`), which appear n SOURCES.md and RPZ headers.
+    - URLs must be valid (starting with `http://` or `https://`) and enclosed in parentheses.
+    - Semicolons (`;`) separate license, source, and other comments in the CSV (e.g., `License: MIT (https://example.com); Source: Example (https://example.com)`).
+    - Ensure proper escaping of commas and semicolons within the CSV field (e.g., enclose in quotes if needed).
+    - Invalid license formats may result in parsing errors; check `tools/logs/error.log` for details.
+    - When adding new sources, verify license information to ensure accuracy and compliance.
 
 **Convert Lists to RPZ:**
 
@@ -247,3 +268,4 @@ The conversion script (`blocklist2rpz-multi.pl`) is licensed under GPLv3 (see [t
 Email: twitOne@protonmail.com
 
 **Enjoy safe and flexible DNS filtering!**
+
