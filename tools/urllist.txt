@@ -11,6 +11,7 @@ ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/popupad
 ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.mini.txt
 ads,https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.plus.mini.txt
 ads,https://raw.githubusercontent.com/StevenBlack/hosts/master/data/adaway.org/hosts
+ads,https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/filters.txt
 ads,https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
 ads,https://v.firebog.net/hosts/AdguardDNS.txt
 ads,https://v.firebog.net/hosts/Admiral.txt
@@ -41,12 +42,17 @@ misc,https://nsfw.oisd.nl
 misc,https://nsfw-small.oisd.nl
 misc,https://small.oisd.nl
 misc,https://raw.githubusercontent.com/AssoEchap/stalkerware-indicators/master/generated/hosts
-misc,https://raw.githubusercontent.com/hagezi/dns-blocklists/heads/main/rpz/pro.mini.txt
+misc,https://raw.githubusercontent.com/badmojr/1Hosts/master/Lite/domains.txt
+misc,https://raw.githubusercontent.com/badmojr/1Hosts/master/Pro/rpz.txt
+misc,https://raw.githubusercontent.com/hagezi/dns-blocklists/main/rpz/pro.mini.txt
 misc,https://raw.githubusercontent.com/hagezi/dns-blocklists/main/rpz/pro.txt
 misc,https://raw.githubusercontent.com/hagezi/dns-blocklists/main/rpz/ultimate.mini.txt
 misc,https://raw.githubusercontent.com/hagezi/dns-blocklists/main/rpz/ultimate.txt
 misc,https://raw.githubusercontent.com/StevenBlack/hosts/master/data/yoyo.org/hosts
+misc,https://small.oisd.nl
 
+phishing,https://raw.githubusercontent.com/durablenapkin/scamblocklist/master/hosts.txt
+phishing,https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/phishing-domains-ACTIVE.txt
 phishing,https://urlhaus.abuse.ch/downloads/hostfile/
 
 social,https://raw.githubusercontent.com/anudeepND/blacklist/master/facebook.txt
