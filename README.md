@@ -99,6 +99,12 @@ RPZ-Blocklists/
 
 The `blocklist2rpz-format-tester.pl` script is a helper tool to test whether blocklists are compatible with the RPZ conversion process before adding them to `tools/urllist.txt` or `tools/list-mappings.csv`. It processes a blocklist (from a file, URL, or STDIN) and outputs valid domains in RPZ format, reporting unprocessed lines and format statistics.
 
+Before adding new blocklists to `tools/urllist.txt` or `tools/list-mappings.csv`, validate them with this script to ensure compatibility.
+
+**Performance and Edge Cases**:
+- Processes ~137K domains in ~3 seconds and ~763K domains in ~28 seconds (single-threaded, line-by-line processing for low memory usage).
+- Handles edge cases like malformed domains and DNS zone entries (e.g., SOA, NS records) by logging them as unprocessed.
+
 **Key Features:**
 - Supports all input formats listed in "Supported Blocklist Formats" (Hosts, Adblock Plus, etc.)
 - Debug mode (`--debug`) for detailed processing logs
