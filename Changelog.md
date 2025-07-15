@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.4.7] - 2025-07-15
+
+### Added
+- New helper script `blocklist2rpz-format-tester.pl` to test blocklist formats before conversion:
+- Supports all input formats (Hosts, Adblock Plus, Plain Domain, etc.)
+- Features debug mode (`--debug`), log file output (`--log-file`), format statistics, and processing time
+- Converts Unicode domains to Punycode
+- Outputs unprocessed lines for debugging
+- Updated `README.md` to include `blocklist2rpz-format-tester.pl` in the repository structure and add a "Blocklist Format Testing" section with usage examples.
+
+
 ## [0.4.7] - 2025-07-06
 
 ### Changed
@@ -11,9 +22,9 @@ All notable changes to this project will be documented in this file.
 - Updated `blocklist2rpz-multi.pl` to include optional license annotations in parentheses (e.g., `(custom note)`) as part of the license name in `SOURCES.md` (e.g., `[CC BY-SA (custom note)](https://dsi.ut-capitole.fr/blacklists/)`).
 - Modified license parsing regex to capture annotations in parentheses as part of the license name.
 - Updated `README.md` to:
-  - Clarify support for multiple licenses (comma-separated) and annotations in parentheses in `SOURCES.md` and RPZ file headers.
-  - Add detailed syntax guide for `list-mappings.csv`, explaining the use of commas for multiple licenses and parentheses for annotations, with examples.
-  - Improve clarity for contributors adding new sources to `list-mappings.csv` by describing the role of commas and parentheses.
+- Clarify support for multiple licenses (comma-separated) and annotations in parentheses in `SOURCES.md` and RPZ file headers.
+- Add detailed syntax guide for `list-mappings.csv`, explaining the use of commas for multiple licenses and parentheses for annotations, with examples.
+- Improve clarity for contributors adding new sources to `list-mappings.csv` by describing the role of commas and parentheses.
 
  ---
 
@@ -22,9 +33,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **Flexible RPZ input format support:**  
-  - Added parsing for multiple RPZ actions: CNAME, NXDOMAIN, DROP, NODATA, PASSTHRU, TXT, A, AAAA.
-  - Input format definitions now allow specifying which regex group to extract (group field).
-  - Unicode domain support: automatic conversion to Punycode for all output domains.
+- Added parsing for multiple RPZ actions: CNAME, NXDOMAIN, DROP, NODATA, PASSTHRU, TXT, A, AAAA.
+- Input format definitions now allow specifying which regex group to extract (group field).
+- Unicode domain support: automatic conversion to Punycode for all output domains.
 
 ### Changed
 

@@ -61,27 +61,28 @@ All formats can be mixed within a single source file. Invalid or duplicate domai
 
 ```
 RPZ-Blocklists/
-├── ads/                        # RPZ files for ad and tracker domains
-├── malware/                    # RPZ files for malware and malicious domains
-├── phishing/                   # RPZ files for phishing and fraud domains
-├── social/                     # RPZ files for social media domains
-├── tracking/                   # RPZ files for tracking and spyware domains
-├── misc/                       # RPZ files for mixed or uncategorized sources
+├── ads/                                # RPZ files for ad and tracker domains
+├── malware/                            # RPZ files for malware and malicious domains
+├── phishing/                           # RPZ files for phishing and fraud domains
+├── social/                             # RPZ files for social media domains
+├── tracking/                           # RPZ files for tracking and spyware domains
+├── misc/                               # RPZ files for mixed or uncategorized sources
 ├── tools/
-│   ├── blocklist2rpz-multi.pl  # Perl script to convert and validate blocklists
-│   ├── cpanfile                # Perl module dependencies
-│   ├── list-mappings.csv       # Maps URLs to categories, filenames, and licenses
-│   ├── source-hashes.csv       # Tracks source hashes, ETags, and stats
-│   ├── urllist.txt             # List of blocklist sources (,)
-│   ├── logs/                   # (Git-ignored) error, status, and validation logs
-│   └── LICENSE                 # GPLv3 license for the conversion script
+│   ├── blocklist2rpz-multi.pl          # Perl script to convert and validate blocklists
+│   ├── blocklist2rpz-format-tester.pl  # Helper script to test blocklist formats before conversion
+│   ├── cpanfile                        # Perl module dependencies
+│   ├── list-mappings.csv               # Maps URLs to categories, filenames, and licenses
+│   ├── source-hashes.csv               # Tracks source hashes, ETags, and stats
+│   ├── urllist.txt                     # List of blocklist sources (,)
+│   ├── logs/                           # (Git-ignored) error, status, and validation logs
+│   └── LICENSE                         # GPLv3 license for the conversion script
 ├── .github/workflows/
-│   └── update-rpz.yml          # GitHub Actions workflow for hourly updates
-├── .gitignore                  # Ignores logs and temporary files
-├── README.md                   # Project documentation
-├── CONTRIBUTING.md             # Contribution guidelines
-├── git-guide.md                # Git workflow guide
-└── SOURCES.md                  # Auto-generated source overview
+│   └── update-rpz.yml                  # GitHub Actions workflow for hourly updates
+├── .gitignore                          # Ignores logs and temporary files
+├── README.md                           # Project documentation
+├── CONTRIBUTING.md                     # Contribution guidelines
+├── git-guide.md                        # Git workflow guide
+└── SOURCES.md                          # Auto-generated source overview
 ```
 
 ## How the Conversion Script Works
@@ -93,6 +94,35 @@ RPZ-Blocklists/
 - Adds license/source comments and metadata to each RPZ file
 - Validates syntax and domain structure
 - Updates `SOURCES.md` with stats and status for each source
+
+## Blocklist Format Testing
+
+The `blocklist2rpz-format-tester.pl` script is a helper tool to test whether blocklists are compatible with the RPZ conversion process before adding them to `tools/urllist.txt` or `tools/list-mappings.csv`. It processes a blocklist (from a file, URL, or STDIN) and outputs valid domains in RPZ format, reporting unprocessed lines and format statistics.
+
+**Key Features:**
+- Supports all input formats listed in "Supported Blocklist Formats" (Hosts, Adblock Plus, etc.)
+- Debug mode (`--debug`) for detailed processing logs
+- Optional log file (`--log-file`) for warnings
+- Format statistics and processing time in the summary
+- Converts Unicode domains to Punycode
+
+**Example Usage:**
+```bash
+perl tools/blocklist2rpz-format-tester.pl https://raw.githubusercontent.com/whatever/list/main/domains.txt
+perl tools/blocklist2rpz-format-tester.pl -w -i blocklist.txt -d -l errors.log
+```
+
+**Example Output:**
+```
+Summary:
+Processed domains: 137590
+Unprocessed lines: 0
+Processing time: 3.12 seconds
+Format statistics:
+  Comment: 15 lines
+  Plain Domain: 137590 lines
+```
+
 
 ## How to Use
 
